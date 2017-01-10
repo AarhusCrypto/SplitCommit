@@ -1,4 +1,4 @@
-set(libOTe_DIR "${CMAKE_SOURCE_DIR}/libs/libOTe")
+set(libOTe_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs/libOTe")
 add_definitions(-DSOLUTION_DIR=\"${libOTe_DIR}\")
 
 set(Miracl_DIR "${libOTe_DIR}/thirdparty/linux/miracl")
