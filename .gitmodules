@@ -1,0 +1,12 @@
+[submodule "libs/libOTe"]
+	path = libs/libOTe
+	url = https://github.com/osu-crypto/libOTe
+  ignore = dirty
+[submodule "libs/googletest"]
+	path = libs/googletest
+	url = https://github.com/google/googletest
+  ignore = dirty
+[submodule "libs/CTPL"]
+	path = libs/CTPL
+	url = https://github.com/vit-vit/CTPL
+  ignore = dirty

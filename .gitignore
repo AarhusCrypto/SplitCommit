@@ -1,0 +1,27 @@
+xcode
+build
+*.DS_Store
+*.out
+*.o
+*.a
+CMakeFiles
+CMakeScripts
+CMakeCache.txt
+CTestTestfile.cmake
+cmake_install.cmake
+Makefile
+gcc_Debug.h
+gcc_Release.h
+
+#Visual Studio
+.vs/*
+*.opendb
+*.db
+*/x64/*
+x64/*
+ipch/*
+*.filters
+*.user
+/Report20170107-2150.vspx
+/Report20170107-2139.vspx
+/copySourceToLinux.ps1
