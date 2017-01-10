@@ -12,7 +12,7 @@ The code has been tested to work on MacOS (10.12.1), Windows 10, and Ubuntu 16.0
 
 To clone, build and test the code:
 * git clone --recursive https://github.com/AarhusCrypto/SplitCommit
-* cd splitcommit
+* cd SplitCommit
 * ./cmake-release
 * ./build/release/TestSplitCommit
 
