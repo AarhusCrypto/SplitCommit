@@ -11,9 +11,9 @@ The code has been tested to work on MacOS (10.12.1), Windows 10, and Ubuntu 16.0
 * C++ compiler with C++14 support. The code has been successfully built with GCC 5.3.1, GCC 6.1 and CLANG 3.8 and Microsoft Visual Studio. The project is self-contained, meaning no external libraries are required.
 
 To clone, build and test the code:
-* git clone --recursive https://github.com/AarhusCrypto/splitcommit
-* cd splitcommit
-* ./cmake-release
+* git clone --recursive https://github.com/AarhusCrypto/SplitCommit
+* cd SplitCommit
+* ./cmake-release.sh
 * ./build/release/TestSplitCommit
 
 If all tests succeed you are good to go.
@@ -23,7 +23,7 @@ Two main files are produced during compilation, build/release/SplitCommitSender 
 * [Machine A] ./build/release/SplitCommitSender -n 10000 -e 8 -ip [A's IP] -p [port_num]
 * [Machine B] ./build/release/SplitCommitReceiver -n 10000 -e 8 -ip [A's IP] -p [port_num]
 
-The above code print the time it takes to respectively perform OTs, commit, decommit and batch decommit 10000 random values. The -e parameters specifies how many parallel executions to run. The code by default always runs num_cpus executions concurrently.
+The above code prints the time it takes to respectively perform OTs, commit, decommit and batch decommit for 10,000 random values. The -e parameters specifies how many parallel executions to run. No matter the number of parallel executions, the code only runs num_cpus executions concurrently.
 
 ##Acknowledgements
 * A huge thanks goes out to [Peter Rindal](https://github.com/ladnir) for helping with the integration with libOTe and optimizing performance of the library.
