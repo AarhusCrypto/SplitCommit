@@ -27,7 +27,7 @@ In `powershell`, clone, build and test the code:
 * cd ../..
 * splitcommit.sln
 
-Run the `test-split-commit` project to perform the unit tests.
+Run the `test-split-commit` project to perform the unit tests. If you have issue with `buildAll.ps1`, follow the more manual instructions at [libOTe](https://github.com/osu-crypto/libOTe) which is what `buildAll.ps1` automates.
 
 ##Running the main files
 Two main files are produced during compilation, build/release/SplitCommitSender and build/release/SplitCommitReceiver. An example run of the two clients on different machines could be
