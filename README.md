@@ -10,6 +10,7 @@ The code has been tested to work on MacOS (10.12.1), Windows 10, and Ubuntu 16.0
 ###Requirements
 * C++ compiler with C++14 support. The code has been successfully built with GCC 5.3.1, GCC 6.1 and CLANG 3.8 and Microsoft Visual Studio. The project is self-contained, meaning no external libraries are required.
 
+#### Linux
 To clone, build and test the code:
 * git clone --recursive https://github.com/AarhusCrypto/SplitCommit
 * cd SplitCommit
@@ -17,6 +18,16 @@ To clone, build and test the code:
 * ./build/release/TestSplitCommit
 
 If all tests succeed you are good to go.
+
+#### Windows
+In `powershell`, clone, build and test the code:
+* git clone --recursive https://github.com/AarhusCrypto/SplitCommit
+* cd SplitCommit/libs/libOTe
+* ./buildAll.ps1
+* cd ../..
+* splitcommit.sln
+
+Run the `test-split-commit` project to perform the unit tests.
 
 ##Running the main files
 Two main files are produced during compilation, build/release/SplitCommitSender and build/release/SplitCommitReceiver. An example run of the two clients on different machines could be
