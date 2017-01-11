@@ -1,13 +1,21 @@
 #include "split-commit/split-commit.h"
 
-void SplitCommit::LoadCode(uint32_t msg_bits) {
+void SplitCommit::LoadCode(uint32_t msg_bits, std::string gen_matrix) {
   if (msg_bits == 1) {
-    // code.loadTxtFile(std::string("matrices/40-rep-code.txt")); //No code is loaded due to SplitCommit::BitEncode(uint8_t data, uint8_t check_bits[])
+    // if (gen_matrix.empty()) {
+    //   code.loadTxtFile(std::string("matrices/40-rep-code.txt")); //No code is loaded due to SplitCommit::BitEncode(uint8_t data, uint8_t check_bits[])
+    // } else {
+    //   code.loadTxtFile(gen_matrix);
+    // }
     parity_bytes = 5;
     cword_bytes = 5; //the value bit is included
     msg_in_cword_offset = 0;
   } else if (msg_bits == 128) {
-    code.loadTxtFile(std::string("matrices/bch-128x134.txt"));
+    if (gen_matrix.empty()) {
+      code.loadTxtFile(std::string("matrices/bch-128x134.txt"));
+    } else {
+      code.loadTxtFile(gen_matrix);
+    }
     parity_bytes = code.codewordU8Size();
     cword_bytes = code.codewordU8Size() + code.plaintextU8Size();
     msg_in_cword_offset = code.plaintextU8Size();

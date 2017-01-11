@@ -33,7 +33,7 @@ public:
   bool msg_size_set;
   bool ots_set;
 
-  void LoadCode(uint32_t msg_bits);
+  void LoadCode(uint32_t msg_bits, std::string gen_matrix);
 
   void BitEncode(uint8_t data, uint8_t check_bits[]);
 
