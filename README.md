@@ -27,7 +27,11 @@ In `powershell`, clone, build and test the code:
 * cd ../..
 * splitcommit.sln
 
-Run the `test-split-commit` project to perform the unit tests. If you have issue with `buildAll.ps1`, follow the more manual instructions at [libOTe](https://github.com/osu-crypto/libOTe) which is what `buildAll.ps1` automates.
+Note: 
+* gtest located at `./libs/googletest/gtest` must be manually build. That is, open `./libs/googletest/gtest/msvc/gtest.vcproj`, upgrade it if needed, and then build it with Visual Studio.
+* If you have issue with `buildAll.ps1` which builds boost, miracl and libOTe, then follow the more manual instructions at [libOTe](https://github.com/osu-crypto/libOTe) which is what `buildAll.ps1` automates.
+
+Run the `test-split-commit` project to perform the unit tests. 
 
 ##Running the main files
 Two main files are produced during compilation, build/release/SplitCommitSender and build/release/SplitCommitReceiver. An example run of the two clients on different machines could be
