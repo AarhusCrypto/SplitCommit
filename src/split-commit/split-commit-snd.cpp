@@ -131,7 +131,7 @@ void SplitCommitSender::Decommit(std::array<BYTEArrayVector, 2>& decommit_shares
   chl.asyncSendCopy(decommit_shares[1].data(), decommit_shares[1].size());
 }
 
-void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_received) {
+void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_sent) {
 
   if ((decommit_shares[0].entry_size() != cword_bytes) ||
       (decommit_shares[1].entry_size() != cword_bytes)
@@ -143,7 +143,7 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
     throw std::runtime_error("Share size mismatch");
   }
 
-  if (!values_received) {
+  if (!values_sent) {
 
     uint32_t num_values = decommit_shares[0].num_entries();
 

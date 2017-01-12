@@ -67,9 +67,9 @@ public:
    *
    * @param      decommit_shares  The decommit shares
    * @param      chl              The channel used for communicating with the other party
-   * @param      values_received  Boolean indicating if the values have already been sent by the caller or not
+   * @param      values_sent  Boolean indicating if the values have already been sent by the caller or not
    */
-  void BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_received = false);
+  void BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_sent = false);
 
 private:
 
