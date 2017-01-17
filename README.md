@@ -6,7 +6,7 @@ The library is written with efficiency in mind, while being flexible enough for 
 
 ### Performance
 
-On a single Intel Xeon server (`2 36-cores Intel Xeon CPU E5-2699 v3 @ 2.30GHz and 256GB of RAM`), utilizing a *single thread* per party, the implementation can perform n=2<sup>24</sup> commitment in `11 seconds` (0.65 microseconds/per), decommit in `5.4 sceonds` (0.32 microseconds/per), and batch-decommit in `4.6 seconds` (0.27 microseconds/per).
+On a single Intel Xeon server (`2 36-cores Intel Xeon CPU E5-2699 v3 @ 2.30GHz and 256GB of RAM`), utilizing a *single thread* per party, the implementation can perform n=2<sup>24</sup> commitment in `11 seconds` (0.65 microseconds/per), decommit in `5.4 seconds` (0.32 microseconds/per), and batch-decommit in `4.6 seconds` (0.27 microseconds/per).
 
 ## Installation
 The code has been tested to work on MacOS (10.12.1), Windows 10, and Ubuntu 16.04.
