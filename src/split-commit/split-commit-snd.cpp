@@ -1,8 +1,8 @@
 #include "split-commit/split-commit-snd.h"
 
-void SplitCommitSender::SetMsgBitSize(uint32_t msg_bits) {
+void SplitCommitSender::SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path) {
 
-  LoadCode(msg_bits);
+  LoadCode(msg_bits, gen_matrix_path);
 
   ot_rnds = {
     std::vector<osuCrypto::PRNG>(cword_bits),
@@ -77,7 +77,7 @@ void SplitCommitSender::GetCloneSenders(uint32_t num_execs, std::vector<SplitCom
       rnds[1][i].get<uint8_t>(tmp.data(), CSEC_BYTES);
       curr_seed_ots[i][1] = load_block(tmp.data());
     }
-    senders[e].SetMsgBitSize(msg_bits);
+    senders[e].SetMsgBitSize(msg_bits, gen_matrix_path);
     senders[e].SetSeedOTs(curr_seed_ots);
   }
 }
@@ -131,7 +131,7 @@ void SplitCommitSender::Decommit(std::array<BYTEArrayVector, 2>& decommit_shares
   chl.asyncSendCopy(decommit_shares[1].data(), decommit_shares[1].size());
 }
 
-void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl) {
+void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_sent) {
 
   if ((decommit_shares[0].entry_size() != cword_bytes) ||
       (decommit_shares[1].entry_size() != cword_bytes)
@@ -143,29 +143,32 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
     throw std::runtime_error("Share size mismatch");
   }
 
-  uint32_t num_values = decommit_shares[0].num_entries();
+  if (!values_sent) {
 
-  //Create and send the postulated values
-  std::unique_ptr<BYTEArrayVector> decommit_values;
-  if (msg_bits == 1) {
+    uint32_t num_values = decommit_shares[0].num_entries();
 
-    decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(BITS_TO_BYTES(num_values), 1));
-    for (int l = 0; l < num_values; ++l) {
-      SetBit(l, GetBit(0, decommit_shares[0][l]), decommit_values->data());
-      XORBit(l, GetBit(0, decommit_shares[1][l]), decommit_values->data());
+    //Create and send the postulated values
+    std::unique_ptr<BYTEArrayVector> decommit_values;
+    if (msg_bits == 1) {
+
+      decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(BITS_TO_BYTES(num_values), 1));
+      for (int l = 0; l < num_values; ++l) {
+        SetBit(l, GetBit(0, decommit_shares[0][l]), decommit_values->data());
+        XORBit(l, GetBit(0, decommit_shares[1][l]), decommit_values->data());
+      }
+    } else if (msg_bits == 128) {
+
+      decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(num_values, msg_bytes));
+      for (int l = 0; l < num_values; ++l) {
+        XOR_128((*decommit_values)[l], decommit_shares[0][l], decommit_shares[1][l]);
+
+      }
+    } else {
+      throw std::runtime_error("Invalid call to BatchDecommit!");
     }
-  } else if (msg_bits == 128) {
 
-    decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(num_values, msg_bytes));
-    for (int l = 0; l < num_values; ++l) {
-      XOR_128((*decommit_values)[l], decommit_shares[0][l], decommit_shares[1][l]);
-
-    }
-  } else {
-    throw std::runtime_error("Invalid call to BatchDecommit!");
+    chl.asyncSend(std::move(decommit_values));
   }
-
-  chl.asyncSend(std::move(decommit_values));
 
   std::array<BYTEArrayVector, 2> resulting_shares = {
     BYTEArrayVector(cword_bits, BATCH_DECOMMIT),

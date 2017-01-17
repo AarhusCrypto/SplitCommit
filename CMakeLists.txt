@@ -19,7 +19,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/obj/")
 set(ENV{MALLOC_PERMIT_INSANE_REQUESTS} "SOME VALUE")
 
 #Compiler flags
-set(CMAKE_C_FLAGS "-march=native")
+set(CMAKE_C_FLAGS "-march=native -pthread")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++14")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -g3 -O0 -Wall -pg")

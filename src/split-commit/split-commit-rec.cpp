@@ -1,8 +1,8 @@
 #include "split-commit/split-commit-rec.h"
 
-void SplitCommitReceiver::SetMsgBitSize(uint32_t msg_bits) {
+void SplitCommitReceiver::SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path) {
 
-  LoadCode(msg_bits);
+  LoadCode(msg_bits, gen_matrix_path);
 
   ot_rnds = std::vector<osuCrypto::PRNG>(cword_bits);
   seed_ot_choices.resize(cword_bits);
@@ -71,7 +71,7 @@ void SplitCommitReceiver::GetCloneReceivers(uint32_t num_execs, osuCrypto::PRNG&
       rnds[i].get<uint8_t>(tmp.data(), CSEC_BYTES);
       curr_seed_ots[i] = load_block(tmp.data());
     }
-    receivers[e].SetMsgBitSize(msg_bits);
+    receivers[e].SetMsgBitSize(msg_bits, gen_matrix_path);
     receivers[e].SetSeedOTs(curr_seed_ots, seed_ot_choices);
 
     rnd.get<uint8_t>(tmp.data(), CSEC_BYTES);
@@ -136,7 +136,55 @@ bool SplitCommitReceiver::Decommit(BYTEArrayVector& commit_shares, BYTEArrayVect
 
 }
 
-bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl) {
+bool SplitCommitReceiver::VerifyDecommits(std::array<BYTEArrayVector, 2>& decommit_shares, BYTEArrayVector& commit_shares, BYTEArrayVector & resulting_values) {
+
+  std::vector<uint8_t> decommited_value(cword_bytes);
+  std::vector<uint8_t> check_bits(parity_bytes);
+  uint32_t num_values = commit_shares.num_entries();
+  for (int j = 0; j < num_values; ++j) {
+    //Check value shares
+    for (int i = 0; i < msg_bytes; ++i) {
+      if ((commit_shares[j][i] ^
+           (decommit_shares[1][j][i] &
+            seed_ot_choices.data()[i]) ^
+           (decommit_shares[0][j][i] &
+            ~seed_ot_choices.data()[i])) != 0) {
+        return false;
+      }
+    }
+    std::fill(check_bits.begin(), check_bits.end(), 0);
+
+    if (msg_bits == 1) {
+      XOR_BitCodeWords(decommited_value.data(), decommit_shares[0][j], decommit_shares[1][j]);
+      BitEncode(GetBit(0, decommited_value.data()), check_bits.data());
+    } else {
+      XOR_CodeWords(decommited_value.data(), decommit_shares[0][j], decommit_shares[1][j]);
+      code.encode(decommited_value.data(), check_bits.data());
+    }
+
+    //Check checkbit shares
+    for (int i = 0; i < parity_bytes; ++i) {
+      if ((commit_shares[j][msg_in_cword_offset + i] ^
+           (decommit_shares[1][j][msg_in_cword_offset + i] &
+            seed_ot_choices.data()[msg_in_cword_offset + i]) ^
+           (decommit_shares[0][j][msg_in_cword_offset + i] &
+            ~seed_ot_choices.data()[msg_in_cword_offset + i])) != 0 ||
+          (check_bits[i] != decommited_value[msg_in_cword_offset + i])) {
+        return false;
+      }
+    }
+
+    if (msg_bits == 1) {
+      SetBit(j, GetBit(0, decommited_value.data()), resulting_values.data());
+    } else {
+      std::copy(decommited_value.data(), decommited_value.data() + msg_in_cword_offset, resulting_values[j]);
+    }
+  }
+
+  return true; //All checks passed!
+}
+
+bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received) {
 
    if (commit_shares.entry_size() != cword_bytes) {
     throw std::runtime_error("Incorrect codeword size provided");
@@ -155,7 +203,9 @@ bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArra
   }
 
   //Receive the postulated values
-  chl.recv(resulting_values.data(), resulting_values.size());
+  if (!values_received) {
+    chl.recv(resulting_values.data(), resulting_values.size());
+  }
 
   BYTEArrayVector resulting_shares(cword_bits, BATCH_DECOMMIT);
   BYTEArrayVector resulting_values_shares(msg_bits, BATCH_DECOMMIT);
@@ -245,54 +295,6 @@ void SplitCommitReceiver::CheckbitCorrection(BYTEArrayVector& commit_shares, BYT
       blind_shares[j][msg_in_cword_offset + p] ^= checkbit_corrections_buf[num_commits + j][p] & seed_ot_choices.data()[msg_in_cword_offset + p];
     }
   }
-}
-
-bool SplitCommitReceiver::VerifyDecommits(std::array<BYTEArrayVector, 2>& decommit_shares, BYTEArrayVector& commit_shares, BYTEArrayVector & resulting_values) {
-
-  std::vector<uint8_t> decommited_value(cword_bytes);
-  std::vector<uint8_t> check_bits(parity_bytes);
-  uint32_t num_values = commit_shares.num_entries();
-  for (int j = 0; j < num_values; ++j) {
-    //Check value shares
-    for (int i = 0; i < msg_bytes; ++i) {
-      if ((commit_shares[j][i] ^
-           (decommit_shares[1][j][i] &
-            seed_ot_choices.data()[i]) ^
-           (decommit_shares[0][j][i] &
-            ~seed_ot_choices.data()[i])) != 0) {
-        return false;
-      }
-    }
-    std::fill(check_bits.begin(), check_bits.end(), 0);
-
-    if (msg_bits == 1) {
-      XOR_BitCodeWords(decommited_value.data(), decommit_shares[0][j], decommit_shares[1][j]);
-      BitEncode(GetBit(0, decommited_value.data()), check_bits.data());
-    } else {
-      XOR_CodeWords(decommited_value.data(), decommit_shares[0][j], decommit_shares[1][j]);
-      code.encode(decommited_value.data(), check_bits.data());
-    }
-
-    //Check checkbit shares
-    for (int i = 0; i < parity_bytes; ++i) {
-      if ((commit_shares[j][msg_in_cword_offset + i] ^
-           (decommit_shares[1][j][msg_in_cword_offset + i] &
-            seed_ot_choices.data()[msg_in_cword_offset + i]) ^
-           (decommit_shares[0][j][msg_in_cword_offset + i] &
-            ~seed_ot_choices.data()[msg_in_cword_offset + i])) != 0 ||
-          (check_bits[i] != decommited_value[msg_in_cword_offset + i])) {
-        return false;
-      }
-    }
-
-    if (msg_bits == 1) {
-      SetBit(j, GetBit(0, decommited_value.data()), resulting_values.data());
-    } else {
-      std::copy(decommited_value.data(), decommited_value.data() + msg_in_cword_offset, resulting_values[j]);
-    }
-  }
-
-  return true; //All checks passed!
 }
 
 void SplitCommitReceiver::ExpandAndTranspose(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares) {

@@ -14,7 +14,7 @@ The code has been tested to work on MacOS (10.12.1), Windows 10, and Ubuntu 16.0
 ### Requirements
 * C++ compiler with C++14 support. The code has been successfully built with GCC 5.3.1, GCC 6.1 and CLANG 3.8 and Microsoft Visual Studio. The project is self-contained, meaning no external libraries are required.
 
-#### Linux
+#### Linux/macOS
 To clone, build and test the code:
 * git clone --recursive https://github.com/AarhusCrypto/SplitCommit
 * cd SplitCommit

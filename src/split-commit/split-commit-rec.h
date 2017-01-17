@@ -21,7 +21,7 @@ public:
    *
    * @param[in]  msg_bits  The message bit size. Currently 1 and 128 is supported
    */
-  void SetMsgBitSize(uint32_t msg_bits);
+  void SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path = "");
 
   /**
    * @brief      Computes and stores the OTs necessary for committing
@@ -69,16 +69,28 @@ public:
   bool Decommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::Channel& chl);
 
   /**
+   * @brief      Verifies the provided decommit_shares using the held commit_shares
+   *
+   * @param      decommit_shares   The decommit shares
+   * @param      commit_shares     The commit shares
+   * @param      resulting_values  The resulting values
+   *
+   * @return     true if check succeeds, else false
+   */
+  bool VerifyDecommits(std::array<BYTEArrayVector, 2>& decommit_shares, BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values);
+
+  /**
    * @brief      Batch Decommits the commitments defined by the passed shares. Batch Decommitment requires less bandwidth than normal Decommit and is preferrable when decommitting to several values at a time
    *
    * @param      commit_shares     The commit shares
    * @param      resulting_values  Where to store the resulting values if the decommits succeed
    * @param      rnd               The prng used for randomness generation
    * @param      chl               The chl
+   * @param      values_received   Boolean indicating if the values have already been sent by the caller or not
    *
    * @return     true if decommit passes, else false
    */
-  bool BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl);
+  bool BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received = false);
 
 private:
 
@@ -123,17 +135,6 @@ private:
    * @param      chl                      The channel used for communicating with the other party
    */
   void ComputeShares(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_shares, BYTEArrayVector& resulting_values, BYTEArrayVector& resulting_values_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl);
-
-  /**
-   * @brief      Verifies the provided decommit_shares using the held commit_shares
-   *
-   * @param      decommit_shares   The decommit shares
-   * @param      commit_shares     The commit shares
-   * @param      resulting_values  The resulting values
-   *
-   * @return     true if check succeeds, else false
-   */
-  bool VerifyDecommits(std::array<BYTEArrayVector, 2>& decommit_shares, BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values);
 
   /**
    * @brief      Verifies the provided received_shares towards the provided resulting_shares and that the resulting values are indeed codewords. This call is used by ConsistencyCheck and BatchDecommit to only check the resulting linear combinations

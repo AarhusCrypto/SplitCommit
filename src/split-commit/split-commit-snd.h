@@ -20,7 +20,7 @@ public:
    *
    * @param[in]  msg_bits  The message bit size. Currently 1 and 128 is supported
    */
-  void SetMsgBitSize(uint32_t msg_bits);
+  void SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path = "");
 
   /**
    * @brief      Computes and stores the OTs necessary for committing
@@ -67,8 +67,9 @@ public:
    *
    * @param      decommit_shares  The decommit shares
    * @param      chl              The channel used for communicating with the other party
+   * @param      values_sent  Boolean indicating if the values have already been sent by the caller or not
    */
-  void BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl);
+  void BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_sent = false);
 
 private:
 
