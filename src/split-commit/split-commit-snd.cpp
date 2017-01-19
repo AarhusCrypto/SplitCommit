@@ -148,26 +148,26 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
     uint32_t num_values = decommit_shares[0].num_entries();
 
     //Create and send the postulated values
-    std::unique_ptr<BYTEArrayVector> decommit_values;
+    BYTEArrayVector decommit_values;
     if (msg_bits == 1) {
 
-      decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(BITS_TO_BYTES(num_values), 1));
+      decommit_values = BYTEArrayVector(BITS_TO_BYTES(num_values), 1);
       for (int l = 0; l < num_values; ++l) {
-        SetBit(l, GetBit(0, decommit_shares[0][l]), decommit_values->data());
-        XORBit(l, GetBit(0, decommit_shares[1][l]), decommit_values->data());
+        SetBit(l, GetBit(0, decommit_shares[0][l]), decommit_values.data());
+        XORBit(l, GetBit(0, decommit_shares[1][l]), decommit_values.data());
       }
     } else if (msg_bits == 128) {
 
-      decommit_values = std::make_unique<BYTEArrayVector>(BYTEArrayVector(num_values, msg_bytes));
+      decommit_values = BYTEArrayVector(num_values, msg_bytes);
       for (int l = 0; l < num_values; ++l) {
-        XOR_128((*decommit_values)[l], decommit_shares[0][l], decommit_shares[1][l]);
+        XOR_128(decommit_values[l], decommit_shares[0][l], decommit_shares[1][l]);
 
       }
     } else {
       throw std::runtime_error("Invalid call to BatchDecommit!");
     }
 
-    chl.asyncSend(std::move(decommit_values));
+    SafeAsyncSend(chl, decommit_values);
   }
 
   std::array<BYTEArrayVector, 2> resulting_shares = {
@@ -177,15 +177,9 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
 
   ComputeShares(decommit_shares, resulting_shares, chl);
 
-  //Convert to unique_ptr for asyncSend
-  std::array<std::unique_ptr<BYTEArrayVector>, 2> resulting_shares_ptr = {
-    std::make_unique<BYTEArrayVector>(BYTEArrayVector(std::move(resulting_shares[0]))),
-    std::make_unique<BYTEArrayVector>(BYTEArrayVector(std::move(resulting_shares[1])))
-  };
-
   //Send the resulting decommitments
-  chl.asyncSend(std::move(resulting_shares_ptr[0]));
-  chl.asyncSend(std::move(resulting_shares_ptr[1]));
+  SafeAsyncSend(chl, resulting_shares[0]);
+  SafeAsyncSend(chl, resulting_shares[1]);
 }
 
 void SplitCommitSender::ExpandAndTranspose(std::array<BYTEArrayVector, 2>& commit_shares, std::array<BYTEArrayVector, 2>& blind_shares) {
@@ -234,24 +228,24 @@ void SplitCommitSender::CheckbitCorrection(std::array<BYTEArrayVector, 2>& commi
   if (set_lsb_start_idx != std::numeric_limits<uint32_t>::max()) {
     //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions below set_lsb_start_idx will get lsb set to 0 and above set to 1
 
-    std::unique_ptr<BYTEArrayVector> lsb_corrections(std::make_unique<BYTEArrayVector>(BITS_TO_BYTES(num_commits), 1));
+    BYTEArrayVector lsb_corrections(BITS_TO_BYTES(num_commits), 1);
     uint8_t flip_table[] = {REVERSE_BYTE_ORDER[1], 0};
 
     for (int i = 0; i < num_commits; ++i) {
-      SetBit(i, GetLSB(commit_shares[0][i]) ^ GetLSB(commit_shares[1][i]), lsb_corrections->data());
+      SetBit(i, GetLSB(commit_shares[0][i]) ^ GetLSB(commit_shares[1][i]), lsb_corrections.data());
 
       if (i < set_lsb_start_idx) {
-        commit_shares[1][i][msg_bytes - 1] ^= REVERSE_BYTE_ORDER[GetBit(i, lsb_corrections->data())];
+        commit_shares[1][i][msg_bytes - 1] ^= REVERSE_BYTE_ORDER[GetBit(i, lsb_corrections.data())];
       } else {
-        commit_shares[1][i][msg_bytes - 1] ^= flip_table[GetBit(i, lsb_corrections->data())];
+        commit_shares[1][i][msg_bytes - 1] ^= flip_table[GetBit(i, lsb_corrections.data())];
       }
     }
 
-    chl.asyncSend(std::move(lsb_corrections));
+    SafeAsyncSend(chl, lsb_corrections);
   }
 
   //Buffers
-  std::unique_ptr<BYTEArrayVector> checkbit_corrections_buf(std::make_unique<BYTEArrayVector>(num_total_commits, parity_bytes));
+  BYTEArrayVector checkbit_corrections_buf(num_total_commits, parity_bytes);
 
   std::vector<uint8_t> values_buffer(cword_bytes);
   if (msg_bits == 1) {
@@ -260,39 +254,39 @@ void SplitCommitSender::CheckbitCorrection(std::array<BYTEArrayVector, 2>& commi
     for (int j = 0; j < num_commits; ++j) {
       XOR_BitCodeWords(values_buffer.data(), commit_shares[0][j], commit_shares[1][j]);
 
-      BitEncode(GetBit(0, values_buffer.data()), (*checkbit_corrections_buf)[j]);
+      BitEncode(GetBit(0, values_buffer.data()), checkbit_corrections_buf[j]);
 
-      XOR_BitCodeWords(commit_shares[1][j], commit_shares[0][j], (*checkbit_corrections_buf)[j]);
-      XOR_BitCodeWords((*checkbit_corrections_buf)[j], values_buffer.data());
+      XOR_BitCodeWords(commit_shares[1][j], commit_shares[0][j], checkbit_corrections_buf[j]);
+      XOR_BitCodeWords(checkbit_corrections_buf[j], values_buffer.data());
     }
 
     for (int j = 0; j < NUM_PAR_CHECKS; ++j) {
       XOR_BitCodeWords(values_buffer.data(), blind_shares[0][j], blind_shares[1][j]);
 
-      BitEncode(GetBit(0, values_buffer.data()), (*checkbit_corrections_buf)[num_commits + j]);
+      BitEncode(GetBit(0, values_buffer.data()), checkbit_corrections_buf[num_commits + j]);
 
-      XOR_BitCodeWords(blind_shares[1][j], blind_shares[0][j], (*checkbit_corrections_buf)[num_commits + j]);
-      XOR_BitCodeWords((*checkbit_corrections_buf)[num_commits + j], values_buffer.data());
+      XOR_BitCodeWords(blind_shares[1][j], blind_shares[0][j], checkbit_corrections_buf[num_commits + j]);
+      XOR_BitCodeWords(checkbit_corrections_buf[num_commits + j], values_buffer.data());
     }
   } else {
     for (int j = 0; j < num_commits; ++j) {
       XOR_CodeWords(values_buffer.data(), commit_shares[0][j], commit_shares[1][j]);
-      code.encode(values_buffer.data(), (*checkbit_corrections_buf)[j]);
+      code.encode(values_buffer.data(), checkbit_corrections_buf[j]);
 
-      XOR_CheckBits(commit_shares[1][j] + msg_bytes, commit_shares[0][j] + msg_bytes, (*checkbit_corrections_buf)[j]);
-      XOR_CheckBits((*checkbit_corrections_buf)[j], values_buffer.data() + msg_bytes);
+      XOR_CheckBits(commit_shares[1][j] + msg_bytes, commit_shares[0][j] + msg_bytes, checkbit_corrections_buf[j]);
+      XOR_CheckBits(checkbit_corrections_buf[j], values_buffer.data() + msg_bytes);
     }
 
     for (int j = 0; j < NUM_PAR_CHECKS; ++j) {
       XOR_CodeWords(values_buffer.data(), blind_shares[0][j], blind_shares[1][j]);
-      code.encode(values_buffer.data(), (*checkbit_corrections_buf)[num_commits + j]);
+      code.encode(values_buffer.data(), checkbit_corrections_buf[num_commits + j]);
 
-      XOR_CheckBits(blind_shares[1][j] + msg_bytes, blind_shares[0][j] + msg_bytes, (*checkbit_corrections_buf)[num_commits + j]);
-      XOR_CheckBits((*checkbit_corrections_buf)[num_commits + j], values_buffer.data() + msg_bytes);
+      XOR_CheckBits(blind_shares[1][j] + msg_bytes, blind_shares[0][j] + msg_bytes, checkbit_corrections_buf[num_commits + j]);
+      XOR_CheckBits(checkbit_corrections_buf[num_commits + j], values_buffer.data() + msg_bytes);
     }
   }
-
-  chl.asyncSend(std::move(checkbit_corrections_buf));
+  
+  SafeAsyncSend(chl, checkbit_corrections_buf);
 }
 
 void SplitCommitSender::ConsistencyCheck(std::array<BYTEArrayVector, 2>& commit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel & chl) {
@@ -324,15 +318,8 @@ void SplitCommitSender::ConsistencyCheck(std::array<BYTEArrayVector, 2>& commit_
     }
   }
 
-  //Convert to unique_ptr for asyncSend
-  std::array<std::unique_ptr<BYTEArrayVector>, 2> resulting_shares_ptr = {
-    std::make_unique<BYTEArrayVector>(BYTEArrayVector(std::move(resulting_shares[0]))),
-    std::make_unique<BYTEArrayVector>(BYTEArrayVector(std::move(resulting_shares[1])))
-  };
-
-  //Send the resulting decommitments
-  chl.asyncSend(std::move(resulting_shares_ptr[0]));
-  chl.asyncSend(std::move(resulting_shares_ptr[1]));
+  SafeAsyncSend(chl, resulting_shares[0]);
+  SafeAsyncSend(chl, resulting_shares[1]);
 }
 
 void SplitCommitSender::ComputeShares(std::array<BYTEArrayVector, 2>& commit_shares, std::array<BYTEArrayVector, 2>& resulting_shares, osuCrypto::Channel & chl) {
