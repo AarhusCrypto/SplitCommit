@@ -8,8 +8,7 @@ BYTEArrayVector::BYTEArrayVector() {
 BYTEArrayVector::BYTEArrayVector(uint64_t num_entries, uint64_t entry_size) :
   vec(num_entries * entry_size),
   vec_entry_size(entry_size),
-  vec_num_entries(num_entries),
-  vec_size(num_entries * entry_size) {
+  vec_num_entries(num_entries) {
 }
 
 uint8_t* BYTEArrayVector::operator[](const uint64_t idx) {
@@ -26,7 +25,7 @@ void BYTEArrayVector::FreeMem() {
 }
 
 uint64_t BYTEArrayVector::size() {
-  return vec_size;
+  return vec.size();
 }
 
 uint64_t BYTEArrayVector::num_entries() {

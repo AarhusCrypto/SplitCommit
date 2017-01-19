@@ -18,7 +18,6 @@ private:
   /**
    * Various member variables about the size and state of the BYTEArrayVector
    */
-  uint64_t vec_size;
   uint64_t vec_num_entries;
   uint64_t vec_entry_size;
 public:
