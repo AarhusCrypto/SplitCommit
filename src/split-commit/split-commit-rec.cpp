@@ -530,7 +530,6 @@ bool SplitCommitReceiver::VerifyTransposedDecommits(std::array<BYTEArrayVector, 
   //Transpose the decommitted values so we can access them column-wise and thus compute the check-bits.
   osuCrypto::sse_transpose(matrix, trans_matrix);
 
-  uint8_t value;
   std::vector<uint8_t> check_bits(parity_bytes);
   for (int i = 0; i < num_values; ++i) {
 

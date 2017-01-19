@@ -250,7 +250,6 @@ void SplitCommitSender::CheckbitCorrection(std::array<BYTEArrayVector, 2>& commi
   std::vector<uint8_t> values_buffer(cword_bytes);
   if (msg_bits == 1) {
 
-    uint8_t value;
     for (int j = 0; j < num_commits; ++j) {
       XOR_BitCodeWords(values_buffer.data(), commit_shares[0][j], commit_shares[1][j]);
 

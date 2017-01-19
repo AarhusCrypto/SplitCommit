@@ -7,8 +7,8 @@ BYTEArrayVector::BYTEArrayVector() {
 
 BYTEArrayVector::BYTEArrayVector(uint64_t num_entries, uint64_t entry_size) :
   vec(num_entries * entry_size),
-  vec_entry_size(entry_size),
-  vec_num_entries(num_entries) {
+  vec_num_entries(num_entries),
+  vec_entry_size(entry_size){
 }
 
 uint8_t* BYTEArrayVector::operator[](const uint64_t idx) {
