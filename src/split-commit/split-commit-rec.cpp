@@ -79,7 +79,7 @@ void SplitCommitReceiver::GetCloneReceivers(uint32_t num_execs, osuCrypto::PRNG&
   }
 }
 
-bool SplitCommitReceiver::Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx) {
+bool SplitCommitReceiver::Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx, COMMIT_TYPE commit_type) {
 
   if (!ots_set) {
     throw std::runtime_error("Need to compute and set OTs before committing");
@@ -94,11 +94,30 @@ bool SplitCommitReceiver::Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG
     throw std::runtime_error("Incorrect codeword size provided");
   }
 
+  if (commit_type != NORMAL && msg_bits != 128) {
+    throw std::runtime_error("Only supported for k=128!");
+  }
+
   BYTEArrayVector blind_shares(NUM_PAR_CHECKS, cword_bytes);
 
   ExpandAndTranspose(commit_shares, blind_shares);
+
+  uint32_t num_commits = commit_shares.num_entries();
+  bool lsb;
+  if (commit_type == ALL_ZERO_LSB_RND) {
+    for (int i = 0; i < num_commits; ++i) {
+      bool lsb = GetLSB(commit_shares[i]);
+      std::fill(commit_shares[i], commit_shares[i] + msg_bytes, 0);
+      SetBit(127, lsb, commit_shares[i]);
+    }
+  } else if (commit_type == ALL_RND_LSB_ZERO) {
+    for (int i = 0; i < num_commits; ++i) {
+      SetBit(127, 0, commit_shares[i]);
+    }
+  }
+
   CheckbitCorrection(commit_shares, blind_shares, set_lsb_start_idx, chl);
-  if (ConsistencyCheck(commit_shares, blind_shares, rnd, chl)) {
+  if (ConsistencyCheck(commit_shares, blind_shares, rnd, chl, commit_type)) {
     return true;
 
   } else {
@@ -186,7 +205,7 @@ bool SplitCommitReceiver::VerifyDecommits(std::array<BYTEArrayVector, 2>& decomm
 
 bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received) {
 
-   if (commit_shares.entry_size() != cword_bytes) {
+  if (commit_shares.entry_size() != cword_bytes) {
     throw std::runtime_error("Incorrect codeword size provided");
   }
 
@@ -321,7 +340,7 @@ void SplitCommitReceiver::ExpandAndTranspose(BYTEArrayVector& commit_shares, BYT
   osuCrypto::sse_transpose(matrix, trans_matrix);
 }
 
-bool SplitCommitReceiver::ConsistencyCheck(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl) {
+bool SplitCommitReceiver::ConsistencyCheck(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, COMMIT_TYPE commit_type) {
 
   BYTEArrayVector resulting_shares(cword_bits, CONSISTENCY);
   BYTEArrayVector dummy0, dummy1;
@@ -346,6 +365,31 @@ bool SplitCommitReceiver::ConsistencyCheck(BYTEArrayVector& commit_shares, BYTEA
 
   chl.recv(received_shares[0].data(), received_shares[0].size());
   chl.recv(received_shares[1].data(), received_shares[1].size());
+
+  //Check if the decomitted random linear combinations fit the prescribed form.
+  if (commit_type == ALL_ZERO_LSB_RND) {
+    for (int i = 0; i < 127; ++i) {
+      if (seed_ot_choices[i]) {
+        if (!std::equal(trans_matrix[i].data(), trans_matrix[i].data() + CONSISTENCY, received_shares[1][i])) {
+          return false;
+        }
+      } else {
+        if (!std::equal(trans_matrix[i].data(), trans_matrix[i].data() + CONSISTENCY, received_shares[0][i])) {
+          return false;
+        }
+      }
+    }
+  } else if (commit_type == ALL_RND_LSB_ZERO) {
+    if (seed_ot_choices[127]) {
+      if (!std::equal(trans_matrix[127].data(), trans_matrix[127].data() + CONSISTENCY, received_shares[1][127])) {
+        return false;
+      }
+    } else {
+      if (!std::equal(trans_matrix[127].data(), trans_matrix[127].data() + CONSISTENCY, received_shares[0][127])) {
+        return false;
+      }
+    }
+  }
 
   if (!VerifyTransposedDecommits(received_shares, resulting_shares)) {
     return false;
@@ -429,20 +473,20 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
       res[1][i] = _mm_xor_si128(res[1][i], val_result[1]);
 
       if (trans_values && string_values && (i < msg_bits)) {
-        
+
         val = _mm_lddqu_si128((__m128i*) iter_values);
-        
+
         osuCrypto::mul128(val, alpha, val_result[0], val_result[1]);
 
         iter_values += values_trans_matrix.size()[1];
-        
+
         res_values_tmp[0][i] = _mm_xor_si128(res_values_tmp[0][i], val_result[0]);
         res_values_tmp[1][i] = _mm_xor_si128(res_values_tmp[1][i], val_result[1]);
       }
     }
 
     if (trans_values && !string_values) {
-      
+
       val = _mm_lddqu_si128((__m128i*) iter_values);
 
       osuCrypto::mul128(val, alpha, val_result[0], val_result[1]);
@@ -455,7 +499,7 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
 
     gfmul128_no_refl(alpha, alpha, alpha);
   }
-  
+
   //mask is used to select the first NUM_CHECKS linear combinations from res and store in final_result. Needed as we actually produce NUM_PAR_CHECKS linear combinations due to convenience. However we only send and verify NUM_CHECKS of these.
   std::array<uint8_t, CSEC_BYTES> mask = { 0 };
   std::fill(mask.begin(), mask.begin() + NUM_CHECKS, 0xFF);
@@ -463,7 +507,7 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
 
   //Reduce and move the NUM_CHECKS first linear combinations into resulting_shares
   for (int i = 0; i < cword_bits; ++i) {
-    
+
     gfred128_no_refl(res[0][i], res[1][i], res[0][i]);
     _mm_maskmoveu_si128(res[0][i], store_mask, (char*) resulting_shares[i]);
 

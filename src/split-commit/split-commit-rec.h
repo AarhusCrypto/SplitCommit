@@ -56,7 +56,7 @@ public:
    * 
    * @return     true if commit succeeds, else false
    */
-  bool Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx = std::numeric_limits<uint32_t>::max());
+  bool Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx = std::numeric_limits<uint32_t>::max(), COMMIT_TYPE commit_type = NORMAL);
 
   /**
    * @brief      Receives and Decommits the specified commitments
@@ -122,7 +122,7 @@ private:
    *
    * @return     true if check succeeds, else false
    */
-  bool ConsistencyCheck(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl);
+  bool ConsistencyCheck(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, COMMIT_TYPE commit_type);
 
   /**
    * @brief      Calculates random linear combinations of the provided shares

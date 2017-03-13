@@ -82,7 +82,7 @@ void SplitCommitSender::GetCloneSenders(uint32_t num_execs, std::vector<SplitCom
   }
 }
 
-void SplitCommitSender::Commit(std::array<BYTEArrayVector, 2>& commit_shares, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx) {
+void SplitCommitSender::Commit(std::array<BYTEArrayVector, 2>& commit_shares, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx, COMMIT_TYPE commit_type) {
 
   if (!ots_set) {
     throw std::runtime_error("Need to compute and set OTs before committing");
@@ -103,16 +103,40 @@ void SplitCommitSender::Commit(std::array<BYTEArrayVector, 2>& commit_shares, os
     throw std::runtime_error("Share size mismatch");
   }
 
+  if (commit_type != NORMAL && msg_bits != 128) {
+    throw std::runtime_error("Only supported for k=128!");
+  }
+
   std::array<BYTEArrayVector, 2> blind_shares = {
     BYTEArrayVector(NUM_PAR_CHECKS, cword_bytes),
     BYTEArrayVector(NUM_PAR_CHECKS, cword_bytes)
   };
 
   ExpandAndTranspose(commit_shares, blind_shares);
+
+  uint32_t num_commits = commit_shares[0].num_entries();
+  std::array<bool, 2> lsb = {false, false};
+
+  if (commit_type == ALL_ZERO_LSB_RND) {
+    for (int i = 0; i < num_commits; ++i) {
+      lsb[0] = GetLSB(commit_shares[0][i]);
+      lsb[1] = GetLSB(commit_shares[1][i]);
+
+      std::fill(commit_shares[0][i], commit_shares[0][i] + msg_bytes, 0);
+      std::fill(commit_shares[1][i], commit_shares[1][i] + msg_bytes, 0);
+      SetBit(127, lsb[0], commit_shares[0][i]);
+      SetBit(127, lsb[1], commit_shares[1][i]);
+    }
+
+  } else if (commit_type == ALL_RND_LSB_ZERO) {
+    for (int i = 0; i < num_commits; ++i) {
+      SetBit(127, 0, commit_shares[0][i]);
+      SetBit(127, 0, commit_shares[1][i]);
+    }
+  }
+
   CheckbitCorrection(commit_shares, blind_shares, set_lsb_start_idx, chl);
-
   ConsistencyCheck(commit_shares, blind_shares, chl);
-
 }
 
 void SplitCommitSender::Decommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl) {

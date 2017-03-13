@@ -52,7 +52,7 @@ public:
    * @param      chl                The channel used for communicating with the other party
    * @param[in]  set_lsb_start_idx  The index specifying the cutting point between lsb = 0 and lsb = 1. Defaults to std::numeric_limits<uint32_t>::max(), meaning no bits are fixed
    */
-  void Commit(std::array<BYTEArrayVector, 2>& commit_shares, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx = std::numeric_limits<uint32_t>::max());
+  void Commit(std::array<BYTEArrayVector, 2>& commit_shares, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx = std::numeric_limits<uint32_t>::max(), COMMIT_TYPE commit_type = NORMAL);
 
   /**
    * @brief      Decommits the commitments defined by the passed shares

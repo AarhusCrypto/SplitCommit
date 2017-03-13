@@ -160,6 +160,116 @@ TEST_F(CommitTest, FullTest) {
   }
 }
 
+TEST_F(CommitTest, AllZEROLSBRND) {
+
+  SplitCommitSender commit_snd;
+  commit_snd.SetMsgBitSize(128);
+  SplitCommitReceiver commit_rec;
+  commit_rec.SetMsgBitSize(128);
+
+  std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
+
+    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
+    
+    //Test that we can commit multiple times
+    commit_snd.Commit(send_commit_shares, send_channel, std::numeric_limits<uint32_t>::max(), ALL_ZERO_LSB_RND);
+    commit_snd.BatchDecommit(send_commit_shares, send_channel);
+
+    send_channel.close();
+  });
+
+  std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
+
+    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
+
+    //Test that we can commit multiple times
+    ASSERT_TRUE(commit_rec.Commit(rec_commit_shares, rec_rnd, rec_channel, std::numeric_limits<uint32_t>::max(), ALL_ZERO_LSB_RND));
+
+    //Test BatchDecommit
+    BYTEArrayVector tmp(num_commits, CSEC_BYTES);
+    ASSERT_TRUE(commit_rec.BatchDecommit(rec_commit_shares, tmp, rec_rnd, rec_channel));
+
+    rec_channel.close();
+  });
+
+  ret_snd.wait();
+  ret_rec.wait();
+
+  BYTEArrayVector tmp(1, CSEC_BYTES);
+  for (int l = 0; l < num_commits; l++) {
+    for (int j = 0; j < CODEWORD_BITS; j++) {
+      if (commit_rec.seed_ot_choices[j]) {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[1][l]));
+      } else {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[0][l]));
+      }
+    }
+
+    XOR_128(tmp.data(), send_commit_shares[0][l], send_commit_shares[1][l]);
+    for (int i = 0; i < 127; ++i) {
+      ASSERT_FALSE(GetBit(i, tmp.data()));
+    }
+  }
+}
+
+TEST_F(CommitTest, AllRNDLSBZERO) {
+
+  SplitCommitSender commit_snd;
+  commit_snd.SetMsgBitSize(128);
+  SplitCommitReceiver commit_rec;
+  commit_rec.SetMsgBitSize(128);
+
+  std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
+
+    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
+
+    //Test that we can commit multiple times
+    commit_snd.Commit(send_commit_shares, send_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
+    commit_snd.BatchDecommit(send_commit_shares, send_channel);
+
+    send_channel.close();
+  });
+
+  std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
+
+    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
+
+    //Test that we can commit multiple times
+    ASSERT_TRUE(commit_rec.Commit(rec_commit_shares, rec_rnd, rec_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO));
+
+    //Test BatchDecommit
+    BYTEArrayVector tmp(num_commits, CSEC_BYTES);
+    ASSERT_TRUE(commit_rec.BatchDecommit(rec_commit_shares, tmp, rec_rnd, rec_channel));
+
+    rec_channel.close();
+  });
+
+  ret_snd.wait();
+  ret_rec.wait();
+
+  BYTEArrayVector tmp(1, CSEC_BYTES);
+  for (int l = 0; l < num_commits; l++) {
+    for (int j = 0; j < CODEWORD_BITS; j++) {
+      if (commit_rec.seed_ot_choices[j]) {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[1][l]));
+      } else {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[0][l]));
+      }
+    }
+
+    XOR_128(tmp.data(), send_commit_shares[0][l], send_commit_shares[1][l]);
+    ASSERT_FALSE(GetBit(127, tmp.data()));
+  }
+}
+
 class BitCommitTest : public ::testing::Test {
 
 protected:
