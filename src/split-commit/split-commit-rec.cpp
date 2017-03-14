@@ -264,7 +264,7 @@ bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArra
       }
     }
   } else {
-    for (int i = 0; i < (BATCH_DECOMMIT * CHAR_BIT); ++i) {
+    for (int i = 0; i < msg_bits; ++i) {
       for (int j = 0; j < BATCH_DECOMMIT; ++j) {
         decommit_value[j] = (received_shares[0][i][j] ^ received_shares[1][i][j]);
       }
