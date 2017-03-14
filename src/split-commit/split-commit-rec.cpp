@@ -277,6 +277,55 @@ bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArra
   return true;
 }
 
+bool SplitCommitReceiver::BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl) {
+
+  uint32_t num_commits = commit_shares.num_entries();
+
+  BYTEArrayVector resulting_shares(cword_bits, BATCH_DECOMMIT);
+  BYTEArrayVector resulting_values_shares(1, BATCH_DECOMMIT);
+  BYTEArrayVector resulting_values_in_bytes(num_commits, 1);
+
+  for (int i = 0; i < num_commits; ++i) {
+    *resulting_values_in_bytes[i] = GetBit(i, resulting_values.data());
+  }
+
+  ComputeShares(commit_shares, resulting_shares, resulting_values_in_bytes, resulting_values_shares, rnd, chl);
+
+  osuCrypto::MatrixView<uint8_t> matrix(blind_shares.data(), blind_shares.num_entries(), blind_shares.entry_size(), false);
+  osuCrypto::MatrixView<uint8_t> trans_matrix(cword_bits, BITS_TO_BYTES(NUM_PAR_CHECKS));
+
+  osuCrypto::sse_transpose(matrix, trans_matrix);
+
+  for (int i = 0; i < cword_bits; ++i) {
+    for (int j = 0; j < BATCH_DECOMMIT; ++j) {
+      resulting_shares[i][j] ^= trans_matrix[i][j];
+    }
+  }
+
+  std::array<BYTEArrayVector, 2> received_shares = {
+    BYTEArrayVector(cword_bits, BATCH_DECOMMIT),
+    BYTEArrayVector(cword_bits, BATCH_DECOMMIT)
+  };
+
+  chl.recv(received_shares[0].data(), received_shares[0].size());
+  chl.recv(received_shares[1].data(), received_shares[1].size());
+
+  if (!VerifyTransposedDecommits(received_shares, resulting_shares)) {
+    return false; //Decommits didn't match shares
+  }
+  
+  uint8_t decommit_value[BATCH_DECOMMIT];
+  XOR_UINT8_T(decommit_value, received_shares[0][127], received_shares[1][127], BATCH_DECOMMIT);
+
+  for (int i = 0; i < (BATCH_DECOMMIT * CHAR_BIT); ++i) {
+    if (GetBit(i, decommit_value) != GetBit(i, resulting_values_shares.data())) {
+      return false; //Values didn't match decommits
+    }
+  }
+
+  return true;
+}
+
 void SplitCommitReceiver::CheckbitCorrection(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, uint32_t set_lsb_start_idx, osuCrypto::Channel& chl) {
 
   uint32_t num_commits = commit_shares.num_entries();
@@ -411,25 +460,31 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
 
   uint32_t NUM_CHECKS = resulting_shares.entry_size();
   bool trans_values = (NUM_CHECKS == BATCH_DECOMMIT);
-  bool string_values = (resulting_values_shares.num_entries() == msg_bits);
+
+  uint32_t value_bits;
+  if (resulting_values.entry_size() == 1) {
+    value_bits = 1;
+  } else if (resulting_values.entry_size() == 16) {
+    value_bits = 128;
+  }
 
   osuCrypto::MatrixView<uint8_t> values_matrix;
   osuCrypto::MatrixView<uint8_t> values_trans_matrix;
 
   std::array<std::vector<__m128i>, 2> res_values_tmp = {
-    std::vector<__m128i>(msg_bits),
-    std::vector<__m128i>(msg_bits)
+    std::vector<__m128i>(value_bits),
+    std::vector<__m128i>(value_bits)
   };
 
   if (trans_values) {
     uint32_t values_matrix_dim = resulting_values_shares.num_entries();
 
-    values_matrix = osuCrypto::MatrixView<uint8_t>(resulting_values.data(), num_commits, msg_bytes, false);
+    values_matrix = osuCrypto::MatrixView<uint8_t>(resulting_values.data(), num_commits, resulting_values.entry_size(), false);
     values_trans_matrix = osuCrypto::MatrixView<uint8_t>(values_matrix_dim, BITS_TO_BYTES(matrix_stride));
     std::fill(values_trans_matrix.data(),
               values_trans_matrix.data() + (values_trans_matrix.size()[0] * values_trans_matrix.size()[1]), 0);
 
-    for (int i = 0; i < msg_bits; ++i) {
+    for (int i = 0; i < value_bits; ++i) {
       res_values_tmp[0][i] = _mm_setzero_si128();
       res_values_tmp[1][i] = _mm_setzero_si128();
     }
@@ -472,7 +527,7 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
       res[0][i] = _mm_xor_si128(res[0][i], val_result[0]);
       res[1][i] = _mm_xor_si128(res[1][i], val_result[1]);
 
-      if (trans_values && string_values && (i < msg_bits)) {
+      if (trans_values && (i < value_bits)) {
 
         val = _mm_lddqu_si128((__m128i*) iter_values);
 
@@ -483,18 +538,6 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
         res_values_tmp[0][i] = _mm_xor_si128(res_values_tmp[0][i], val_result[0]);
         res_values_tmp[1][i] = _mm_xor_si128(res_values_tmp[1][i], val_result[1]);
       }
-    }
-
-    if (trans_values && !string_values) {
-
-      val = _mm_lddqu_si128((__m128i*) iter_values);
-
-      osuCrypto::mul128(val, alpha, val_result[0], val_result[1]);
-
-      res_values_tmp[0][0] =
-        _mm_xor_si128(res_values_tmp[0][0], val_result[0]);
-      res_values_tmp[1][0] =
-        _mm_xor_si128(res_values_tmp[1][0], val_result[1]);
     }
 
     gfmul128_no_refl(alpha, alpha, alpha);
@@ -512,16 +555,10 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
     _mm_maskmoveu_si128(res[0][i], store_mask, (char*) resulting_shares[i]);
 
     //Same for values
-    if (trans_values && string_values && (i < msg_bits)) {
+    if (trans_values && (i < value_bits)) {
       gfred128_no_refl(res_values_tmp[0][i], res_values_tmp[1][i], res_values_tmp[0][i]);
       _mm_maskmoveu_si128(res_values_tmp[0][i], store_mask, (char*) (resulting_values_shares[i]));
     }
-  }
-
-  //Special for bit commits
-  if (trans_values && !string_values) {
-    gfred128_no_refl(res_values_tmp[0][0], res_values_tmp[1][0], res_values_tmp[0][0]);
-    _mm_maskmoveu_si128(res_values_tmp[0][0], store_mask, (char*) (resulting_values_shares[0]));
   }
 }
 

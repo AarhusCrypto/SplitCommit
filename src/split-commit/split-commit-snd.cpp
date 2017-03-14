@@ -206,6 +206,40 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
   SafeAsyncSend(chl, resulting_shares[1]);
 }
 
+void SplitCommitSender::BatchDecommitLSB(std::array<BYTEArrayVector, 2>& decommit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel& chl) {
+
+  std::array<BYTEArrayVector, 2> resulting_shares = {
+    BYTEArrayVector(cword_bits, BATCH_DECOMMIT),
+    BYTEArrayVector(cword_bits, BATCH_DECOMMIT)
+  };
+
+  ComputeShares(decommit_shares, resulting_shares, chl);
+
+  std::array<osuCrypto::MatrixView<uint8_t>, 2> matrix = {
+    osuCrypto::MatrixView<uint8_t>(blind_shares[0].data(), blind_shares[0].num_entries(), blind_shares[0].entry_size(), false),
+    osuCrypto::MatrixView<uint8_t>(blind_shares[1].data(), blind_shares[1].num_entries(), blind_shares[1].entry_size(), false)
+  };
+
+  std::array<osuCrypto::MatrixView<uint8_t>, 2> trans_matrix = {
+    osuCrypto::MatrixView<uint8_t>(cword_bits, BITS_TO_BYTES(NUM_PAR_CHECKS)),
+    osuCrypto::MatrixView<uint8_t>(cword_bits, BITS_TO_BYTES(NUM_PAR_CHECKS))
+  };
+
+  osuCrypto::sse_transpose(matrix[0], trans_matrix[0]);
+  osuCrypto::sse_transpose(matrix[1], trans_matrix[1]);
+
+  for (int i = 0; i < cword_bits; ++i) {
+    for (int j = 0; j < BATCH_DECOMMIT; ++j) {
+      resulting_shares[0][i][j] ^= trans_matrix[0][i][j];
+      resulting_shares[1][i][j] ^= trans_matrix[1][i][j];
+    }
+  }
+
+  //Send the resulting decommitments
+  SafeAsyncSend(chl, resulting_shares[0]);
+  SafeAsyncSend(chl, resulting_shares[1]);
+}
+
 void SplitCommitSender::ExpandAndTranspose(std::array<BYTEArrayVector, 2>& commit_shares, std::array<BYTEArrayVector, 2>& blind_shares) {
 
   uint32_t num_commits = commit_shares[0].num_entries();

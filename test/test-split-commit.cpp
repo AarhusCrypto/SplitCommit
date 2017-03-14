@@ -270,6 +270,77 @@ TEST_F(CommitTest, AllRNDLSBZERO) {
   }
 }
 
+TEST_F(CommitTest, DecommitLSB) {
+
+  SplitCommitSender commit_snd;
+  commit_snd.SetMsgBitSize(128);
+  SplitCommitReceiver commit_rec;
+  commit_rec.SetMsgBitSize(128);
+
+  std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
+
+    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
+
+    //Test that we can commit multiple times
+    commit_snd.Commit(send_commit_shares, send_channel, std::numeric_limits<uint32_t>::max());
+
+    std::array<BYTEArrayVector, 2> send_commit_shares_blind = {
+      BYTEArrayVector(40, CODEWORD_BYTES),
+      BYTEArrayVector(40, CODEWORD_BYTES)
+    };
+
+    commit_snd.Commit(send_commit_shares_blind, send_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
+
+    BYTEArrayVector decommit_res(BITS_TO_BYTES(num_commits), 1);
+    for (int i = 0; i < num_commits; ++i) {
+      XORBit(i, GetLSB(send_commit_shares[0][i]), GetLSB(send_commit_shares[1][i]), decommit_res.data());
+    }
+
+    send_channel.asyncSendCopy(decommit_res.data(), decommit_res.size());
+
+    commit_snd.BatchDecommitLSB(send_commit_shares, send_commit_shares_blind, send_channel);
+
+    send_channel.close();
+  });
+
+  std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
+
+    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
+
+    //Test that we can commit multiple times
+    ASSERT_TRUE(commit_rec.Commit(rec_commit_shares, rec_rnd, rec_channel, std::numeric_limits<uint32_t>::max()));
+
+    BYTEArrayVector send_commit_shares_blind(40, CODEWORD_BYTES);
+    ASSERT_TRUE(commit_rec.Commit(send_commit_shares_blind, rec_rnd, rec_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO));
+
+    //Test BatchDecommit
+    BYTEArrayVector decommit_res(BITS_TO_BYTES(num_commits), 1);
+    rec_channel.recv(decommit_res.data(), decommit_res.size());
+    
+    ASSERT_TRUE(commit_rec.BatchDecommitLSB(rec_commit_shares, decommit_res, send_commit_shares_blind, rec_rnd, rec_channel));
+
+    rec_channel.close();
+  });
+
+  ret_snd.wait();
+  ret_rec.wait();
+
+  BYTEArrayVector tmp(1, CSEC_BYTES);
+  for (int l = 0; l < num_commits; l++) {
+    for (int j = 0; j < CODEWORD_BITS; j++) {
+      if (commit_rec.seed_ot_choices[j]) {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[1][l]));
+      } else {
+        ASSERT_EQ(GetBit(j, rec_commit_shares[l]),
+                  GetBit(j, send_commit_shares[0][l]));
+      }
+    }
+  }
+}
+
 class BitCommitTest : public ::testing::Test {
 
 protected:

@@ -92,6 +92,8 @@ public:
    */
   bool BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received = false);
 
+  bool BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl);
+
 private:
 
   /**
