@@ -32,7 +32,7 @@ In `powershell`, clone, build and test the code:
 * splitcommit.sln
 
 Note: 
-* gtest located at `./libs/googletest/gtest` must be manually build. That is, open `./libs/googletest/gtest/msvc/gtest.vcproj`, upgrade it if needed, and then build it with Visual Studio.
+* gtest located at `./libs/googletest/gtest` must be manually built. That is, open `./libs/googletest/gtest/msvc/gtest.vcproj`, upgrade it if needed, and then build it with Visual Studio.
 * If you have issue with `buildAll.ps1` which builds boost, miracl and libOTe, then follow the more manual instructions at [libOTe](https://github.com/osu-crypto/libOTe) which is what `buildAll.ps1` automates.
 
 Run the `test-split-commit` project to perform the unit tests. 
@@ -49,4 +49,4 @@ The above code prints the time it takes to respectively perform OTs, commit, dec
 * The author also heartedly thanks [Ignacio Cascudo Pueyo](http://vbn.aau.dk/en/persons/ignacio-cascudo-pueyo(2f2ded74-b364-4a8d-ada1-189dad083eea).html) and [Diego Ruano](http://vbn.aau.dk/en/persons/diego-ruano(d83d0116-0ba0-448c-aa87-b70afefd1fda).html) of Aalborg University for their invaluable help in creating the generator matrix for the [262,128,40] error correcting code used by the library.
 
 ## References
-* [1] T. K. Frederiksen, T. P. Jakobsen, J. B. Nielsen, R. Trifiletti, “On the Complexity of Additively Homomorphic UC commitments,” in TCC 2016-A, Part I, ser. LNCS, E. Kushilevitz and T. Malkin, Eds., vol. 9562. Springer, Jan. 2016, pp. 542–565.
+* [1] T. K. Frederiksen, T. P. Jakobsen, J. B. Nielsen, R. Trifiletti, “On the Complexity of Additively Homomorphic UC commitments,” in TCC 2016-A, Part I, ser. LNCS, E. Kushilevitz and T. Malkin, Eds., vol. 9562. Springer, Jan. 2016, pp. 542–565. Availible: http://ia.cr/2015/694.
