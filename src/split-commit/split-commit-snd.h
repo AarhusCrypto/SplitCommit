@@ -67,11 +67,19 @@ public:
    *
    * @param      decommit_shares  The decommit shares
    * @param      chl              The channel used for communicating with the other party
-   * @param      values_sent  Boolean indicating if the values have already been sent by the caller or not
+   * @param      values_sent  Boolean indicating if the values have already been sent by the sender or not
    */
   void BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_shares, osuCrypto::Channel& chl, bool values_sent = false);
 
-  void BatchDecommitLSB(std::array<BYTEArrayVector, 2>& decommit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel& chl);
+  /**
+   * @brief      Batch Decommits the lsb of the commitments defined by the passed shares.
+   *
+   * @param      decommit_shares  The decommit shares
+   * @param      blind_shares     Shares used to blind each of the random linear combinations. Must be of the form R||0 which can be created using Commit
+   * @param      chl              The channel used for communicating with the other party
+   * @param      values_sent      Boolean indicating if the values have already been sent by the sender or not
+   */
+  void BatchDecommitLSB(std::array<BYTEArrayVector, 2>& decommit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel& chl, bool values_sent = false);
 
 private:
 

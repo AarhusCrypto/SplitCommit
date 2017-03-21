@@ -142,7 +142,7 @@ bool SplitCommitReceiver::Decommit(BYTEArrayVector& commit_shares, BYTEArrayVect
   if (msg_bits != 1 && commit_shares.num_entries() != resulting_values.num_entries()) {
     throw std::runtime_error("Number of decommit msgs mismatch");
   }
-  
+
   std::array<BYTEArrayVector, 2> decommit_shares = {
     BYTEArrayVector(commit_shares.num_entries(), cword_bytes),
     BYTEArrayVector(commit_shares.num_entries(), cword_bytes)
@@ -277,7 +277,12 @@ bool SplitCommitReceiver::BatchDecommit(BYTEArrayVector& commit_shares, BYTEArra
   return true;
 }
 
-bool SplitCommitReceiver::BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl) {
+bool SplitCommitReceiver::BatchDecommitLSB(BYTEArrayVector& commit_shares, osuCrypto::BitVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received) {
+
+  //Receive the postulated values
+  if (!values_received) {
+    chl.recv(resulting_values);
+  }
 
   uint32_t num_commits = commit_shares.num_entries();
 
@@ -286,7 +291,7 @@ bool SplitCommitReceiver::BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEA
   BYTEArrayVector resulting_values_in_bytes(num_commits, 1);
 
   for (int i = 0; i < num_commits; ++i) {
-    *resulting_values_in_bytes[i] = GetBit(i, resulting_values.data());
+    *resulting_values_in_bytes[i] = resulting_values[i];
   }
 
   ComputeShares(commit_shares, resulting_shares, resulting_values_in_bytes, resulting_values_shares, rnd, chl);
@@ -313,7 +318,7 @@ bool SplitCommitReceiver::BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEA
   if (!VerifyTransposedDecommits(received_shares, resulting_shares)) {
     return false; //Decommits didn't match shares
   }
-  
+
   uint8_t decommit_value[BATCH_DECOMMIT];
   XOR_UINT8_T(decommit_value, received_shares[0][127], received_shares[1][127], BATCH_DECOMMIT);
 
@@ -332,17 +337,19 @@ void SplitCommitReceiver::CheckbitCorrection(BYTEArrayVector& commit_shares, BYT
   uint32_t num_total_commits = num_commits + NUM_PAR_CHECKS;
 
   if (set_lsb_start_idx != std::numeric_limits<uint32_t>::max()) {
-    //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions below set_lsb_start_idx will get lsb set to 0 and above set to 1
-    BYTEArrayVector lsb_corrections(BITS_TO_BYTES(num_commits), 1);
-    chl.recv(lsb_corrections.data(), lsb_corrections.size());
+    //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions above set_lsb_start_idx will get lsb set to 1
+
+    uint32_t num_corrections = num_commits - set_lsb_start_idx;
+
+    osuCrypto::BitVector lsb_corrections(num_corrections);
+    chl.recv(lsb_corrections);
+
     if (seed_ot_choices[msg_bits - 1]) {
       uint8_t flip_table[] = {REVERSE_BYTE_ORDER[1], 0};
-      for (int i = 0; i < num_commits; ++i) {
-        if (i < set_lsb_start_idx) {
-          commit_shares[i][msg_bytes - 1] ^= REVERSE_BYTE_ORDER[GetBit(i, lsb_corrections.data())];
-        } else {
-          commit_shares[i][msg_bytes - 1] ^= flip_table[GetBit(i, lsb_corrections.data())];
-        }
+      for (int i = set_lsb_start_idx; i < num_commits; ++i) {
+        uint32_t curr_idx = i - set_lsb_start_idx;
+        
+        commit_shares[i][msg_bytes - 1] ^= flip_table[lsb_corrections[curr_idx]];
       }
     }
   }

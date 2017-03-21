@@ -206,7 +206,16 @@ void SplitCommitSender::BatchDecommit(std::array<BYTEArrayVector, 2>& decommit_s
   SafeAsyncSend(chl, resulting_shares[1]);
 }
 
-void SplitCommitSender::BatchDecommitLSB(std::array<BYTEArrayVector, 2>& decommit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel& chl) {
+void SplitCommitSender::BatchDecommitLSB(std::array<BYTEArrayVector, 2>& decommit_shares, std::array<BYTEArrayVector, 2>& blind_shares, osuCrypto::Channel& chl, bool values_sent) {
+
+  if (!values_sent) {
+    uint32_t num_values = decommit_shares[0].num_entries();
+    osuCrypto::BitVector decommit_values(num_values);
+    for (int l = 0; l < num_values; ++l) {
+      decommit_values[l] = GetLSB(decommit_shares[0][l]) ^ GetLSB(decommit_shares[1][l]);
+    }
+    chl.send(decommit_values);
+  }
 
   std::array<BYTEArrayVector, 2> resulting_shares = {
     BYTEArrayVector(cword_bits, BATCH_DECOMMIT),
@@ -284,19 +293,18 @@ void SplitCommitSender::CheckbitCorrection(std::array<BYTEArrayVector, 2>& commi
   uint32_t num_total_commits = num_commits + NUM_PAR_CHECKS;
 
   if (set_lsb_start_idx != std::numeric_limits<uint32_t>::max()) {
-    //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions below set_lsb_start_idx will get lsb set to 0 and above set to 1
+    //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions above set_lsb_start_idx will get lsb set to 1
 
-    BYTEArrayVector lsb_corrections(BITS_TO_BYTES(num_commits), 1);
+    uint32_t num_corrections = num_commits - set_lsb_start_idx;
+
+    osuCrypto::BitVector lsb_corrections(num_corrections);
     uint8_t flip_table[] = {REVERSE_BYTE_ORDER[1], 0};
 
-    for (int i = 0; i < num_commits; ++i) {
-      SetBit(i, GetLSB(commit_shares[0][i]) ^ GetLSB(commit_shares[1][i]), lsb_corrections.data());
+    for (int i = set_lsb_start_idx; i < num_commits; ++i) {
+      uint32_t curr_idx = i - set_lsb_start_idx;
 
-      if (i < set_lsb_start_idx) {
-        commit_shares[1][i][msg_bytes - 1] ^= REVERSE_BYTE_ORDER[GetBit(i, lsb_corrections.data())];
-      } else {
-        commit_shares[1][i][msg_bytes - 1] ^= flip_table[GetBit(i, lsb_corrections.data())];
-      }
+      lsb_corrections[curr_idx] = GetLSB(commit_shares[0][i]) ^ GetLSB(commit_shares[1][i]);
+      commit_shares[1][i][msg_bytes - 1] ^= flip_table[lsb_corrections[curr_idx]];
     }
 
     SafeAsyncSend(chl, lsb_corrections);

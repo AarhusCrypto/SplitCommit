@@ -140,12 +140,11 @@ TEST_F(CommitTest, FullTest) {
 
   for (int l = 0; l < num_commits_second; l++) {
     //Test the fixed lsbs
-    if (l < (num_commits_second / 2)) {
-      ASSERT_FALSE(GetLSB(send_commit_shares_second[0][l]) ^
-                   GetLSB(send_commit_shares_second[1][l]));
-    } else {
+    if (l >= (num_commits_second / 2)) {
       ASSERT_TRUE(GetLSB(send_commit_shares_second[0][l]) ^
                   GetLSB(send_commit_shares_second[1][l]));
+    } else {
+      
     }
 
     for (int j = 0; j < CODEWORD_BITS; j++) {
@@ -292,12 +291,12 @@ TEST_F(CommitTest, DecommitLSB) {
 
     commit_snd.Commit(send_commit_shares_blind, send_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
 
-    BYTEArrayVector decommit_res(BITS_TO_BYTES(num_commits), 1);
+    osuCrypto::BitVector decommit_res(num_commits);
     for (int i = 0; i < num_commits; ++i) {
-      XORBit(i, GetLSB(send_commit_shares[0][i]), GetLSB(send_commit_shares[1][i]), decommit_res.data());
+      decommit_res[i] = GetLSB(send_commit_shares[0][i]) ^ GetLSB(send_commit_shares[1][i]);
     }
 
-    send_channel.asyncSendCopy(decommit_res.data(), decommit_res.size());
+    send_channel.send(decommit_res);
 
     commit_snd.BatchDecommitLSB(send_commit_shares, send_commit_shares_blind, send_channel);
 
@@ -316,8 +315,8 @@ TEST_F(CommitTest, DecommitLSB) {
     ASSERT_TRUE(commit_rec.Commit(send_commit_shares_blind, rec_rnd, rec_channel, std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO));
 
     //Test BatchDecommit
-    BYTEArrayVector decommit_res(BITS_TO_BYTES(num_commits), 1);
-    rec_channel.recv(decommit_res.data(), decommit_res.size());
+    osuCrypto::BitVector decommit_res(num_commits);
+    rec_channel.recv(decommit_res);
     
     ASSERT_TRUE(commit_rec.BatchDecommitLSB(rec_commit_shares, decommit_res, send_commit_shares_blind, rec_rnd, rec_channel));
 

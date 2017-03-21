@@ -52,8 +52,8 @@ public:
    * @param      commit_shares      The array to store the resulting commitment shares for the generated random messages. It is assumed that commit_shares is fully initialized. This call will commit to commit_shares.num_entries() random commitments.
    * @param      rnd                The prng used for randomness generation
    * @param      chl                The channel used for communicating with the other party
-   * @param  set_lsb_start_idx  The index specifying the cutting point between lsb = 0 and lsb = 1. Defaults to std::numeric_limits<uint32_t>::max(), meaning no bits are fixed
-   * 
+   * @param  set_lsb_start_idx  The index specifying the start of commits with lsb = 1. Defaults to std::numeric_limits<uint32_t>::max(), meaning no bits are fixed this way
+   *
    * @return     true if commit succeeds, else false
    */
   bool Commit(BYTEArrayVector& commit_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx = std::numeric_limits<uint32_t>::max(), COMMIT_TYPE commit_type = NORMAL);
@@ -86,13 +86,26 @@ public:
    * @param      resulting_values  Where to store the resulting values if the decommits succeed
    * @param      rnd               The prng used for randomness generation
    * @param      chl               The chl
-   * @param      values_received   Boolean indicating if the values have already been sent by the caller or not
+   * @param      values_received   Boolean indicating if the values have already been sent by the sender or not
    *
    * @return     true if decommit passes, else false
    */
   bool BatchDecommit(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received = false);
 
-  bool BatchDecommitLSB(BYTEArrayVector& commit_shares, BYTEArrayVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl);
+
+  /**
+     * @brief      Batch Decommits the lsb of the commitments defined by the passed shares.
+     *
+     * @param      commit_shares     The commit shares
+     * @param      resulting_values  Where to store the resulting values if the decommits succeed
+     * @param      blind_shares      Shares used to blind each of the random linear combinations. Must be of the form R||0 which can be created using Commit
+     * @param      rnd               The prng used for randomness generation
+     * @param      chl               The chl
+     * @param      values_received   Boolean indicating if the values have already been sent by the sender or not
+     *
+     * @return     true if decommit passes, else false
+     */
+  bool BatchDecommitLSB(BYTEArrayVector& commit_shares, osuCrypto::BitVector& resulting_values, BYTEArrayVector& blind_shares, osuCrypto::PRNG& rnd, osuCrypto::Channel& chl, bool values_received = false);
 
 private:
 
@@ -109,8 +122,8 @@ private:
    *
    * @param      commit_shares      The commit shares
    * @param      blind_shares       Used to blind the CONSISTENCY random linear combinations that will be decommitted as part of a Commit call
-   * @param[in]  set_lsb_start_idx  The index specifying the cutting point between lsb = 0 and lsb = 1.
-   * @param      chl                The channel used for communicating with the other party
+   * @param[in]  set_lsb_start_idx  The index specifying the start of commits with lsb = 1.
+   * @param       this waychl                The channel used for communicating with the other party
    */
   void CheckbitCorrection(BYTEArrayVector& commit_shares, BYTEArrayVector& blind_shares, uint32_t set_lsb_start_idx, osuCrypto::Channel& chl);
 
