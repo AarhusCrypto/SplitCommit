@@ -19,7 +19,7 @@ To clone, build and test the code:
 * git clone --recursive https://github.com/AarhusCrypto/SplitCommit
 * cd SplitCommit
 * ./cmake-release.sh
-* ./build/release/TestSplitCommit
+* ./build/release/RunAllTests
 
 If all tests succeed you are good to go.
 
