@@ -336,7 +336,8 @@ void SplitCommitReceiver::CheckbitCorrection(BYTEArrayVector& commit_shares, BYT
   uint32_t num_commits = commit_shares.num_entries();
   uint32_t num_total_commits = num_commits + NUM_PAR_CHECKS;
 
-  if (set_lsb_start_idx != std::numeric_limits<uint32_t>::max()) {
+  if (set_lsb_start_idx != std::numeric_limits<uint32_t>::max() &&
+      set_lsb_start_idx < num_commits) {
     //Is used to set lsb of specific committed values in a range starting from set_lsb_start_idx. The commits with positions above set_lsb_start_idx will get lsb set to 1
 
     uint32_t num_corrections = num_commits - set_lsb_start_idx;
