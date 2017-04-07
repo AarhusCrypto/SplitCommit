@@ -83,9 +83,9 @@ int main(int argc, const char* argv[]) {
   opt.get("-p")->getInt(port);
   opt.get("-ip")->getString(ip_address);
 
-  osuCrypto::BtIOService ios(0);
-  osuCrypto::BtEndpoint send_end_point(ios, ip_address, port, true, "ep");
-  osuCrypto::Channel& send_ot_channel = send_end_point.addChannel("ot_channel", "ot_channel");
+  osuCrypto::IOService ios(0);
+  osuCrypto::Endpoint send_end_point(ios, ip_address, port, osuCrypto::EpMode::Server, "ep");
+  osuCrypto::Channel send_ot_channel = send_end_point.addChannel("ot_channel", "ot_channel");
 
   osuCrypto::PRNG rnd;
   rnd.SetSeed(load_block(constant_seeds[0].data()));
@@ -101,9 +101,9 @@ int main(int argc, const char* argv[]) {
 
   auto seed_ot_end = GET_TIME();
 
-  std::vector<osuCrypto::Channel*> send_channels;
+  std::vector<osuCrypto::Channel> send_channels;
   for (int e = 0; e < num_execs; ++e) {
-    send_channels.emplace_back(&send_end_point.addChannel("commit_channel_" + std::to_string(e), "commit_channel_" + std::to_string(e)));
+    send_channels.emplace_back(send_end_point.addChannel("commit_channel_" + std::to_string(e), "commit_channel_" + std::to_string(e)));
   }
 
   std::vector<SplitCommitSender> senders(num_execs);
@@ -124,7 +124,7 @@ int main(int argc, const char* argv[]) {
     futures[e] = thread_pool.push([&send_end_point, &senders, &send_commit_shares, &send_channels, exec_num_commits, e](int id) {
 
 
-      senders[e].Commit(send_commit_shares[e], *send_channels[e]);
+      senders[e].Commit(send_commit_shares[e], send_channels[e]);
 
     });
   }
@@ -140,7 +140,7 @@ int main(int argc, const char* argv[]) {
     futures[e] = thread_pool.push([&send_end_point, &senders, &send_commit_shares, &send_channels, exec_num_commits, e](int id) {
 
 
-      senders[e].Decommit(send_commit_shares[e], *send_channels[e]);
+      senders[e].Decommit(send_commit_shares[e], send_channels[e]);
 
     });
   }
@@ -156,7 +156,7 @@ int main(int argc, const char* argv[]) {
     futures[e] = thread_pool.push([&send_end_point, &senders, &send_commit_shares, &send_channels, exec_num_commits, e](int id) {
 
 
-      senders[e].BatchDecommit(send_commit_shares[e], *send_channels[e]);
+      senders[e].BatchDecommit(send_commit_shares[e], send_channels[e]);
 
     });
   }
@@ -168,7 +168,7 @@ int main(int argc, const char* argv[]) {
   auto batch_decommit_end = GET_TIME();
 
   for (int e = 0; e < num_execs; ++e) {
-    send_channels[e]->close();
+    send_channels[e].close();
   }
 
   send_end_point.stop();

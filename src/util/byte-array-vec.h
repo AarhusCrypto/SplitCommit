@@ -8,7 +8,7 @@
 /**
  * @brief      A class for easy indexing into a std::vector<uint8_t>
  */
-class BYTEArrayVector : public osuCrypto::ChannelBuffer {
+class BYTEArrayVector {
 private:
   /**
    * The actual data
@@ -76,19 +76,6 @@ public:
    * @brief      Allows to free the memory held by std::vector<uint8_t> manually, instead of waiting for the system garbage collector.
    */
   void FreeMem();
-
-//Implements osuCrypto::ChannelBuffer
-protected:
-  osuCrypto::u8* ChannelBufferData() const override {
-    return (uint8_t*) vec.data();
-  }
-  osuCrypto::u64 ChannelBufferSize() const override {
-    return vec.size();
-  };
-  void ChannelBufferResize(osuCrypto::u64 len) override {
-    if (size() != len)
-      throw std::invalid_argument("asdsdasfaf ;) ");
-  }
 
 };
 

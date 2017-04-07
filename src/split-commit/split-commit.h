@@ -7,11 +7,12 @@
 #include "libOTe/Tools/LinearCode.h"
 
 //For libOTe extension
-#include "cryptoTools/Network/BtChannel.h"
-#include "cryptoTools/Network/BtEndpoint.h"
+#include "cryptoTools/Network/Channel.h"
+#include "cryptoTools/Network/Endpoint.h"
 #include "cryptoTools/Crypto/PRNG.h"
 #include "cryptoTools/Common/BitVector.h"
 #include "libOTe/Base/naor-pinkas.h"
+#include "cryptoTools/Common/Matrix.h"
 #include "cryptoTools/Common/MatrixView.h"
 #include "libOTe/Tools/Tools.h"
 

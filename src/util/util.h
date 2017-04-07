@@ -42,13 +42,6 @@ static const BYTE REVERSE_BYTE_ORDER[256] = { 0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0
 
 static uint8_t BIT_TO_BYTE[] = {0x00, 0xFF};
 
-template<typename T>
-static inline void SafeAsyncSend(osuCrypto::Channel& chl, T& data) {
-  
-  std::unique_ptr<T> data_ptr = std::make_unique<T>(T(std::move(data)));
-  chl.asyncSend(std::move(data_ptr));
-}
-
 static inline __m128i load_block(uint8_t data[]) {
   return _mm_lddqu_si128((__m128i *) data);
 };

@@ -83,9 +83,9 @@ int main(int argc, const char* argv[]) {
   opt.get("-p")->getInt(port);
   opt.get("-ip")->getString(ip_address);
 
-  osuCrypto::BtIOService ios(0);
-  osuCrypto::BtEndpoint rec_end_point(ios, ip_address, port, false, "ep");
-  osuCrypto::Channel& rec_ot_channel = rec_end_point.addChannel("ot_channel", "ot_channel");
+  osuCrypto::IOService ios(0);
+  osuCrypto::Endpoint rec_end_point(ios, ip_address, port, osuCrypto::EpMode::Client, "ep");
+  osuCrypto::Channel rec_ot_channel = rec_end_point.addChannel("ot_channel", "ot_channel");
 
   osuCrypto::PRNG rnd;
   rnd.SetSeed(load_block(constant_seeds[1].data()));
@@ -100,9 +100,9 @@ int main(int argc, const char* argv[]) {
 
   auto seed_ot_end = GET_TIME();
 
-  std::vector<osuCrypto::Channel*> rec_channels;
+  std::vector<osuCrypto::Channel> rec_channels;
   for (int e = 0; e < num_execs; ++e) {
-    rec_channels.emplace_back(&rec_end_point.addChannel("commit_channel_" + std::to_string(e), "commit_channel_" + std::to_string(e)));
+    rec_channels.emplace_back(rec_end_point.addChannel("commit_channel_" + std::to_string(e), "commit_channel_" + std::to_string(e)));
   }
 
   std::vector<SplitCommitReceiver> receivers(num_execs);
@@ -121,7 +121,7 @@ int main(int argc, const char* argv[]) {
 
     futures[e] = thread_pool.push([&rec_end_point, &exec_rnds, &receivers, &rec_commit_shares, &rec_channels, exec_num_commits, e](int id) {
 
-      receivers[e].Commit(rec_commit_shares[e], exec_rnds[e], *rec_channels[e]);
+      receivers[e].Commit(rec_commit_shares[e], exec_rnds[e], rec_channels[e]);
 
     });
   }
@@ -138,7 +138,7 @@ int main(int argc, const char* argv[]) {
     futures[e] = thread_pool.push([&rec_end_point, &exec_rnds, &receivers, &rec_commit_shares, &rec_channels, exec_num_commits, e](int id) {
 
       BYTEArrayVector tmp(exec_num_commits, CSEC_BYTES);
-      receivers[e].Decommit(rec_commit_shares[e], tmp, *rec_channels[e]);
+      receivers[e].Decommit(rec_commit_shares[e], tmp, rec_channels[e]);
 
     });
   }
@@ -155,7 +155,7 @@ int main(int argc, const char* argv[]) {
     futures[e] = thread_pool.push([&rec_end_point, &exec_rnds, &receivers, &rec_commit_shares, &rec_channels, exec_num_commits, e](int id) {
 
       BYTEArrayVector tmp(exec_num_commits, CSEC_BYTES);
-      receivers[e].BatchDecommit(rec_commit_shares[e], tmp, exec_rnds[e], *rec_channels[e]);
+      receivers[e].BatchDecommit(rec_commit_shares[e], tmp, exec_rnds[e], rec_channels[e]);
 
     });
   }
@@ -167,7 +167,7 @@ int main(int argc, const char* argv[]) {
   auto batch_decommit_end = GET_TIME();
 
   for (int e = 0; e < num_execs; ++e) {
-    rec_channels[e]->close();
+    rec_channels[e].close();
   }
 
   rec_end_point.stop();

@@ -1,5 +1,6 @@
 xcode
 build
+bin
 *.DS_Store
 *.out
 *.o
@@ -12,7 +13,6 @@ cmake_install.cmake
 Makefile
 gcc_Debug.h
 gcc_Release.h
-
 #Visual Studio
 .vs/*
 *.opendb

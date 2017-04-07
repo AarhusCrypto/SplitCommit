@@ -17,15 +17,15 @@ protected:
 
   osuCrypto::PRNG send_rnd, rec_rnd;
 
-  osuCrypto::BtIOService ios;
-  osuCrypto::BtEndpoint send_end_point, rec_end_point;
+  osuCrypto::IOService ios;
+  osuCrypto::Endpoint send_end_point, rec_end_point;
 
   CommitTest() :
     rec_commit_shares(num_commits, CODEWORD_BYTES),
     rec_commit_shares_second(num_commits_second, CODEWORD_BYTES),
     ios(0),
-    send_end_point(ios, default_ip_address, 43701, true, "ep"),
-    rec_end_point(ios, default_ip_address, 43701, false, "ep") {
+    send_end_point(ios, default_ip_address, 43701, osuCrypto::EpMode::Server, "ep"),
+    rec_end_point(ios, default_ip_address, 43701, osuCrypto::EpMode::Client, "ep") {
 
     send_commit_shares = {
       BYTEArrayVector(num_commits, CODEWORD_BYTES),
@@ -56,7 +56,7 @@ TEST_F(CommitTest, TestBaseOTs) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("channel", "channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("channel", "channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 
     send_channel.close();
@@ -64,7 +64,7 @@ TEST_F(CommitTest, TestBaseOTs) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("channel", "channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("channel", "channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     rec_channel.close();
@@ -91,7 +91,7 @@ TEST_F(CommitTest, FullTest) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("string_channel", "string_channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 
     //Test that we can commit multiple times
@@ -106,7 +106,7 @@ TEST_F(CommitTest, FullTest) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     //Test that we can commit multiple times
@@ -168,7 +168,7 @@ TEST_F(CommitTest, AllZEROLSBRND) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("string_channel", "string_channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
     
     //Test that we can commit multiple times
@@ -180,7 +180,7 @@ TEST_F(CommitTest, AllZEROLSBRND) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     //Test that we can commit multiple times
@@ -224,7 +224,7 @@ TEST_F(CommitTest, AllRNDLSBZERO) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("string_channel", "string_channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 
     //Test that we can commit multiple times
@@ -236,7 +236,7 @@ TEST_F(CommitTest, AllRNDLSBZERO) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     //Test that we can commit multiple times
@@ -278,7 +278,7 @@ TEST_F(CommitTest, DecommitLSB) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("string_channel", "string_channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 
     //Test that we can commit multiple times
@@ -305,7 +305,7 @@ TEST_F(CommitTest, DecommitLSB) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("string_channel", "string_channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     //Test that we can commit multiple times
@@ -351,15 +351,15 @@ protected:
 
   osuCrypto::PRNG send_rnd, rec_rnd;
 
-  osuCrypto::BtIOService ios;
-  osuCrypto::BtEndpoint send_end_point, rec_end_point;
+  osuCrypto::IOService ios;
+  osuCrypto::Endpoint send_end_point, rec_end_point;
 
   BitCommitTest() :
     rec_commit_shares(num_commits, BIT_CODEWORD_BYTES),
     rec_commit_shares_second(num_commits_second, BIT_CODEWORD_BYTES),
     ios(0),
-    send_end_point(ios, default_ip_address, 43701, true, "ep"),
-    rec_end_point(ios, default_ip_address, 43701, false, "ep") {
+    send_end_point(ios, default_ip_address, 43701, osuCrypto::EpMode::Server, "ep"),
+    rec_end_point(ios, default_ip_address, 43701, osuCrypto::EpMode::Client, "ep") {
 
     send_commit_shares = {
       BYTEArrayVector(num_commits, BIT_CODEWORD_BYTES),
@@ -391,7 +391,7 @@ TEST_F(BitCommitTest, FullTest) {
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
-    osuCrypto::Channel& send_channel = send_end_point.addChannel("bit_channel", "bit_channel");
+    osuCrypto::Channel send_channel = send_end_point.addChannel("bit_channel", "bit_channel");
     commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 
     //Test that we can commit multiple times
@@ -407,7 +407,7 @@ TEST_F(BitCommitTest, FullTest) {
 
   std::future<void> ret_rec = std::async(std::launch::async, [this, &commit_rec]() {
 
-    osuCrypto::Channel& rec_channel = rec_end_point.addChannel("bit_channel", "bit_channel");
+    osuCrypto::Channel rec_channel = rec_end_point.addChannel("bit_channel", "bit_channel");
     commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
 
     //Test that we can commit multiple times
