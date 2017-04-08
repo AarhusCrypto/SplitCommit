@@ -46,6 +46,9 @@ endif(NOT EXISTS ${Miracl_DIR})
 include_directories(${Miracl_DIR})
 include_directories(${libOTe_DIR})
 
+set(hasParent TRUE)
+add_definitions(-DSOLUTION_DIR=\"${CMAKE_SOURCE_DIR}\")
+
 # set(ENV{cryptoTools_NO_NASM} NO) #delete once Peter updates cryptoTools and later libOTe
 add_definitions(-DNO_INTEL_ASM_SHA1=1) #delete once Peter updates cryptoTools and later libOTe
 add_subdirectory(libs/libOTe)
