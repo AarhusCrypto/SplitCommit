@@ -21,7 +21,7 @@ public:
    *
    * @param[in]  msg_bits  The message bit size. Currently 1 and 128 is supported
    */
-  void SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path = "");
+  void SetMsgBitSize(uint32_t msg_bits);
 
   /**
    * @brief      Computes and stores the OTs necessary for committing

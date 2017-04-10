@@ -1,8 +1,12 @@
 #include "split-commit/split-commit-rec.h"
 
-void SplitCommitReceiver::SetMsgBitSize(uint32_t msg_bits, std::string gen_matrix_path) {
-
-  LoadCode(msg_bits, gen_matrix_path);
+void SplitCommitReceiver::SetMsgBitSize(uint32_t msg_bits) {
+  
+  if (msg_bits == 1) {
+    LoadCode(msg_bits, "");
+  } else if(msg_bits == 128) {
+    LoadCode(msg_bits, bch_128_134);
+  }
 
   ot_rnds = std::vector<osuCrypto::PRNG>(cword_bits);
   seed_ot_choices.resize(cword_bits);
@@ -71,7 +75,7 @@ void SplitCommitReceiver::GetCloneReceivers(uint32_t num_execs, osuCrypto::PRNG&
       rnds[i].get<uint8_t>(tmp.data(), CSEC_BYTES);
       curr_seed_ots[i] = load_block(tmp.data());
     }
-    receivers[e].SetMsgBitSize(msg_bits, gen_matrix_path);
+    receivers[e].SetMsgBitSize(msg_bits);
     receivers[e].SetSeedOTs(curr_seed_ots, seed_ot_choices);
 
     rnd.get<uint8_t>(tmp.data(), CSEC_BYTES);

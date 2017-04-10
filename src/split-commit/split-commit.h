@@ -36,7 +36,7 @@ public:
 
   std::string gen_matrix_path;
 
-  void LoadCode(uint32_t msg_bits, std::string gen_matrix_path);
+  void LoadCode(uint32_t msg_bits, std::string gen_matrix);
 
   void BitEncode(uint8_t data, uint8_t check_bits[]);
 
