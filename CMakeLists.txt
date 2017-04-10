@@ -49,7 +49,6 @@ include_directories(${libOTe_DIR})
 set(hasParent TRUE)
 add_definitions(-DSOLUTION_DIR=\"${CMAKE_SOURCE_DIR}\")
 
-set(ENV{cryptoTools_NO_NASM} NO) #delete once Peter updates cryptoTools and later libOTe
 add_subdirectory(libs/libOTe)
 
 #add sources
