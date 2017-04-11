@@ -87,7 +87,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/cryptoTools;$(SolutionDir)/libs/libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/../libOTe/cryptoTools;$(SolutionDir)/../libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -119,7 +119,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/cryptoTools;$(SolutionDir)/libs/libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/../libOTe/cryptoTools;$(SolutionDir)/../libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
