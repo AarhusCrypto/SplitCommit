@@ -10,18 +10,14 @@
 class SplitCommitReceiver : public SplitCommit {
 public:
 
+  SplitCommitReceiver(uint32_t msg_bits);
+  SplitCommitReceiver(SplitCommitReceiver&& cp);
+
   /**
    * Holds the prngs that are used for generation the commitment messages as well as the associated ot_choices
    */
   std::vector<osuCrypto::PRNG> ot_rnds;
   osuCrypto::BitVector seed_ot_choices;
-
-  /**
-   * @brief      Sets the committed messages bit size. Must be called prior to ComputeAndSetSeedOTs
-   *
-   * @param[in]  msg_bits  The message bit size. Currently 1 and 128 is supported
-   */
-  void SetMsgBitSize(uint32_t msg_bits);
 
   /**
    * @brief      Computes and stores the OTs necessary for committing
@@ -44,7 +40,7 @@ public:
    * @param[in]  num_execs  The number of execs to split into
    * @param      senders    Where to store the newly created objects. Senders is assumed to have room for num_execs SplitCommitReceiver
    */
-  void GetCloneReceivers(uint32_t num_execs, osuCrypto::PRNG& rnd, std::vector<SplitCommitReceiver>& receivers, std::vector<osuCrypto::PRNG>& exec_rnds);
+  std::vector<SplitCommitReceiver> GetCloneReceivers(uint32_t num_execs, osuCrypto::PRNG& rnd, std::vector<osuCrypto::PRNG>& exec_rnds);
 
   /**
    * @brief      The function used for committing to random values. Allows for setting the lsb of each commitment with index below set_lsb_start_idx to 0 and to 1 for all above. This is useful for some applications

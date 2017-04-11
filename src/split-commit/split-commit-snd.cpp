@@ -1,26 +1,18 @@
 #include "split-commit/split-commit-snd.h"
 
-void SplitCommitSender::SetMsgBitSize(uint32_t msg_bits) {
+SplitCommitSender::SplitCommitSender(uint32_t msg_bits) :
+  SplitCommit(msg_bits),
+  ot_rnds( {std::vector<osuCrypto::PRNG>(cword_bits), std::vector<osuCrypto::PRNG>(cword_bits)}) {
 
-  if (msg_bits == 1) {
-    LoadCode(msg_bits, "");
-  } else if(msg_bits == 128) {
-    LoadCode(msg_bits, bch_128_134);
-  }
+}
 
-  ot_rnds = {
-    std::vector<osuCrypto::PRNG>(cword_bits),
-    std::vector<osuCrypto::PRNG>(cword_bits)
-  };
+SplitCommitSender::SplitCommitSender(SplitCommitSender&& cp) :
+  SplitCommit(std::move(cp)),
+  ot_rnds({std::move(cp.ot_rnds[0]), std::move(cp.ot_rnds[1])}) {
 
-  msg_size_set = true;
 }
 
 void SplitCommitSender::ComputeAndSetSeedOTs(osuCrypto::PRNG& rnd, osuCrypto::Channel& chl) {
-
-  if (!msg_size_set) {
-    throw std::runtime_error("Need to set the msg size");
-  }
 
   std::vector<osuCrypto::block> base_ots(CSEC);
   osuCrypto::BitVector base_ot_choices(CSEC);
@@ -52,11 +44,11 @@ void SplitCommitSender::SetSeedOTs(std::vector<std::array<osuCrypto::block, 2>> 
   ots_set = true;
 }
 
-void SplitCommitSender::GetCloneSenders(uint32_t num_execs, std::vector<SplitCommitSender>& senders) {
+std::vector<SplitCommitSender> SplitCommitSender::GetCloneSenders(uint32_t num_execs) {
 
-  if (!msg_size_set || !ots_set) {
-    throw std::runtime_error("Need to set the msg size and compute OTs before cloning");
-    return;
+  if (!ots_set) {
+    throw std::runtime_error("Need to compute OTs before cloning");
+    return std::vector<SplitCommitSender>();
   }
 
   uint32_t codeword_length = ot_rnds[0].size();
@@ -71,8 +63,13 @@ void SplitCommitSender::GetCloneSenders(uint32_t num_execs, std::vector<SplitCom
     rnds[1][i].SetSeed(ot_rnds[1][i].getSeed());
   }
 
+  std::vector<SplitCommitSender> senders;
+
   std::array<uint8_t, CSEC_BYTES> tmp;
   for (int e = 0; e < num_execs; ++e) {
+
+    senders.emplace_back(msg_bits);
+
     std::vector<std::array<osuCrypto::block, 2>> curr_seed_ots(codeword_length);
     for (int i = 0; i < codeword_length; ++i) {
       rnds[0][i].get<uint8_t>(tmp.data(), CSEC_BYTES);
@@ -81,9 +78,11 @@ void SplitCommitSender::GetCloneSenders(uint32_t num_execs, std::vector<SplitCom
       rnds[1][i].get<uint8_t>(tmp.data(), CSEC_BYTES);
       curr_seed_ots[i][1] = load_block(tmp.data());
     }
-    senders[e].SetMsgBitSize(msg_bits);
+
     senders[e].SetSeedOTs(curr_seed_ots);
   }
+
+  return senders;
 }
 
 void SplitCommitSender::Commit(std::array<BYTEArrayVector, 2>& commit_shares, osuCrypto::Channel& chl, uint32_t set_lsb_start_idx, COMMIT_TYPE commit_type) {
@@ -359,7 +358,7 @@ void SplitCommitSender::CheckbitCorrection(std::array<BYTEArrayVector, 2>& commi
       XOR_CheckBits(checkbit_corrections_buf[num_commits + j], values_buffer.data() + msg_bytes);
     }
   }
-  
+
   chl.send(checkbit_corrections_buf.data(), checkbit_corrections_buf.size());
 }
 
