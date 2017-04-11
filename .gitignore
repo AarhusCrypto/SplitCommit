@@ -26,4 +26,5 @@ ipch/*
 /Report20170107-2139.vspx
 /copySourceToLinux.ps1
 
-*/x64/*
+src/mains/x64/*
+src/mains/tutorials/x64/*

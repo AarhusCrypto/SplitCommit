@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7DB3B207-FAE4-49F0-9598-64626ADC9BD1}</ProjectGuid>
-    <RootNamespace>testsplitcommit</RootNamespace>
+    <ProjectGuid>{0C402B97-34B7-4EB3-BBBC-A95F48C02310}</ProjectGuid>
+    <RootNamespace>tutorials</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,13 +74,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);gtestd.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;C:\Program Files (x86)\Visual Leak Detector\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -91,8 +85,8 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);gtestd.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;gtestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -102,14 +96,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;$(SolutionDir)libs\googletest\googletest\include;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);gtest.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;C:\Program Files (x86)\Visual Leak Detector\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -125,16 +115,12 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Miracl\x64\$(Configuration)\miracl.lib;libOTe.lib;cryptoTools.lib;splitcommit.lib;gtestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)libs\googletest\googletest\msvc\x64\$(Configuration);C:\libs;C:\libs\boost\stage\lib;$(SolutionDir)/../libOTe/x64/$(Configuration);$(OutDir);$(SolutionDir)/libs/libOTe/x64/$(Configuration);$(SolutionDir)/libs/libOTe/thirdparty/win/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost/stage/lib/;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="run-all-tests.cpp" />
-    <ClCompile Include="test-split-commit.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="test.h" />
+    <ClCompile Include="tutorials.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
