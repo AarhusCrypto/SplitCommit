@@ -473,15 +473,15 @@ void SplitCommitReceiver::ComputeShares(BYTEArrayVector& commit_shares, BYTEArra
   uint32_t NUM_CHECKS = resulting_shares.entry_size();
   bool trans_values = (NUM_CHECKS == BATCH_DECOMMIT);
 
-  uint32_t value_bits;
+  uint32_t value_bits = 0;
   if (resulting_values.entry_size() == 1) {
     value_bits = 1;
   } else if (resulting_values.entry_size() == 16) {
     value_bits = 128;
   }
-  else {
-      throw std::runtime_error("bad resulting_values.entry_size() size");
-  }
+  //else {
+  //    throw std::runtime_error("bad resulting_values.entry_size() size");
+  //}
 
   osuCrypto::MatrixView<uint8_t> values_matrix;
   osuCrypto::Matrix<uint8_t> values_trans_matrix;
