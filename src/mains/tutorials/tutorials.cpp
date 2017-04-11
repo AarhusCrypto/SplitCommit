@@ -39,14 +39,12 @@ void tutorial_commit100()
         rec_end_point(ios, default_ip_address, 43701, osuCrypto::EpMode::Client, "ep");
 
 
-    SplitCommitSender commit_snd;
-    commit_snd.SetMsgBitSize(128);
-    SplitCommitReceiver commit_rec;
-    commit_rec.SetMsgBitSize(128);
+    SplitCommitSender commit_snd(128);
+    SplitCommitReceiver commit_rec(128);
 
     std::thread thrd = std::thread([&]() {
 
-        // create a new cahnnel (socket) to communicate. 
+        // create a new channel (socket) to communicate. 
         osuCrypto::Channel send_channel = send_end_point.addChannel("string_channel", "string_channel");
        
         // initialize the base OTs

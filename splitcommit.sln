@@ -15,6 +15,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "main-split-commit-rec", "src\mains\main-split-commit-rec.vcxproj", "{91CF4509-C0B6-4204-8E2D-1A4EDBFFC133}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tutorials", "src\mains\tutorials\tutorials.vcxproj", "{0C402B97-34B7-4EB3-BBBC-A95F48C02310}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1449896E-D931-44D2-B0B9-4EDB31C51543} = {1449896E-D931-44D2-B0B9-4EDB31C51543}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
