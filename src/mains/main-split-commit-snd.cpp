@@ -90,8 +90,7 @@ int main(int argc, const char* argv[]) {
   osuCrypto::PRNG rnd;
   rnd.SetSeed(load_block(constant_seeds[0].data()));
   
-  SplitCommitSender base_sender;
-  base_sender.SetMsgBitSize(128);
+  SplitCommitSender base_sender(128);
 
   //Seed OTs
   auto seed_ot_begin = GET_TIME();
@@ -106,8 +105,7 @@ int main(int argc, const char* argv[]) {
     send_channels.emplace_back(send_end_point.addChannel("commit_channel_" + std::to_string(e), "commit_channel_" + std::to_string(e)));
   }
 
-  std::vector<SplitCommitSender> senders(num_execs);
-  base_sender.GetCloneSenders(num_execs, senders);
+  std::vector<SplitCommitSender> senders = base_sender.GetCloneSenders(num_execs);
 
   ctpl::thread_pool thread_pool(std::thread::hardware_concurrency());
 

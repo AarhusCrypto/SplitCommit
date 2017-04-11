@@ -49,10 +49,8 @@ protected:
 };
 
 TEST_F(CommitTest, TestBaseOTs) {
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(128);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(128);
+  SplitCommitSender commit_snd(128);
+  SplitCommitReceiver commit_rec(128);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
@@ -84,10 +82,8 @@ TEST_F(CommitTest, TestBaseOTs) {
 
 TEST_F(CommitTest, FullTest) {
 
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(128);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(128);
+  SplitCommitSender commit_snd(128);
+  SplitCommitReceiver commit_rec(128);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
@@ -161,10 +157,8 @@ TEST_F(CommitTest, FullTest) {
 
 TEST_F(CommitTest, AllZEROLSBRND) {
 
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(128);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(128);
+  SplitCommitSender commit_snd(128);
+  SplitCommitReceiver commit_rec(128);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
@@ -217,10 +211,8 @@ TEST_F(CommitTest, AllZEROLSBRND) {
 
 TEST_F(CommitTest, AllRNDLSBZERO) {
 
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(128);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(128);
+  SplitCommitSender commit_snd(128);
+  SplitCommitReceiver commit_rec(128);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
@@ -271,10 +263,8 @@ TEST_F(CommitTest, AllRNDLSBZERO) {
 
 TEST_F(CommitTest, DecommitLSB) {
 
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(128);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(128);
+  SplitCommitSender commit_snd(128);
+  SplitCommitReceiver commit_rec(128);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 
@@ -384,10 +374,8 @@ protected:
 
 TEST_F(BitCommitTest, FullTest) {
 
-  SplitCommitSender commit_snd;
-  commit_snd.SetMsgBitSize(1);
-  SplitCommitReceiver commit_rec;
-  commit_rec.SetMsgBitSize(1);
+  SplitCommitSender commit_snd(1);
+  SplitCommitReceiver commit_rec(1);
 
   std::future<void> ret_snd = std::async(std::launch::async, [this, &commit_snd]() {
 

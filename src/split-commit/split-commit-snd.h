@@ -10,17 +10,13 @@
 class SplitCommitSender : public SplitCommit {
 public:
 
+  SplitCommitSender(uint32_t msg_bits);
+  SplitCommitSender(SplitCommitSender&& cp);
+
   /**
    * Holds the prngs that are used for generation the commitment messages
    */
   std::array<std::vector<osuCrypto::PRNG>, 2> ot_rnds;
-  
-  /**
-   * @brief      Sets the committed messages bit size. Must be called prior to ComputeAndSetSeedOTs
-   *
-   * @param[in]  msg_bits  The message bit size. Currently 1 and 128 is supported
-   */
-  void SetMsgBitSize(uint32_t msg_bits);
 
   /**
    * @brief      Computes and stores the OTs necessary for committing
@@ -43,7 +39,7 @@ public:
    * @param[in]  num_execs  The number of execs to split into
    * @param      senders    Where to store the newly created objects. Senders is assumed to have room for num_execs SplitCommitSenders
    */
-  void GetCloneSenders(uint32_t num_execs, std::vector<SplitCommitSender>& senders);
+  std::vector<SplitCommitSender> GetCloneSenders(uint32_t num_execs);
 
   /**
    * @brief      The function used for committing to random values. Allows for setting the lsb of each commitment with index below set_lsb_start_idx to 0 and to 1 for all above. This is useful for some applications

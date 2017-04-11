@@ -22,6 +22,9 @@
 class SplitCommit {
 public:
 
+  SplitCommit(uint32_t msg_bits);
+  SplitCommit(SplitCommit&& cp);
+
   osuCrypto::LinearCode code;
 
   uint32_t msg_bits;
@@ -31,12 +34,7 @@ public:
   uint32_t parity_bits;
   uint32_t parity_bytes;
   uint32_t msg_in_cword_offset;
-  bool msg_size_set;
   bool ots_set;
-
-  std::string gen_matrix_path;
-
-  void LoadCode(uint32_t msg_bits, std::string gen_matrix);
 
   void BitEncode(uint8_t data, uint8_t check_bits[]);
 
