@@ -99,7 +99,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/cryptoTools;$(SolutionDir)/libs/libOTe/cryptoTools/thirdparty/win/boost;C:/libs/boost;C:/libs;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/../libOTe/crypoTools;$(SolutionDir)/../libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)/libs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -133,7 +133,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/thirdparty/win/boost;C:/libs/boost;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/libs;C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/libs/libOTe/;$(SolutionDir)/libs/libOTe/cryptoTools;$(SolutionDir)/libs/libOTe/cryptoTools/thirdparty/win/boost;C:/libs/boost;C:/libs;$(SolutionDir)/src;$(SolutionDir)/../libOTe;$(SolutionDir)/../libOTe/crypoTools;$(SolutionDir)/../libOTe/cryptoTools/thirdparty/win/boost;$(SolutionDir)/libs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -148,7 +148,6 @@
     <ClCompile Include="main-split-commit-rec.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="commit-rec.h" />
     <ClInclude Include="mains.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
