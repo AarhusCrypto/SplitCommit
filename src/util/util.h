@@ -74,7 +74,7 @@ static inline void XOR_128(uint8_t dest[], uint8_t src0[], uint8_t src1[]) {
   }
 };
 
-//23 bytes
+//17 bytes
 static inline void XOR_CheckBits(uint8_t dest[], uint8_t src[]) {
   for (int i = 0; i < (CODEWORD_BYTES - CSEC_BYTES); i++) {
     dest[i] ^= src[i];
@@ -87,7 +87,7 @@ static inline void XOR_CheckBits(uint8_t dest[], uint8_t src0[], uint8_t src1[])
   }
 };
 
-//39 bytes
+//33 bytes
 static inline void XOR_CodeWords(uint8_t dest[], uint8_t src[]) {
   for (int i = 0; i < CODEWORD_BYTES; i++) {
     dest[i] ^= src[i];
