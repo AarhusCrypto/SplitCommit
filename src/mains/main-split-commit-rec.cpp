@@ -91,11 +91,14 @@ int main(int argc, const char* argv[]) {
   rnd.SetSeed(load_block(constant_seeds[1].data()));
   SplitCommitReceiver base_receiver(128);
 
+  //Values used for network syncing after each phase
+  uint8_t rcv;
+  uint8_t snd;
+
   //Seed OTs
   auto seed_ot_begin = GET_TIME();
 
   base_receiver.ComputeAndSetSeedOTs(rnd, rec_ot_channel);
-  rec_ot_channel.close();
 
   auto seed_ot_end = GET_TIME();
 
@@ -112,6 +115,10 @@ int main(int argc, const char* argv[]) {
 
   std::vector<std::future<void>> futures(num_execs);
   uint32_t exec_num_commits = CEIL_DIVIDE(num_commits, num_execs);
+
+  //Sync with Evaluator
+  rec_ot_channel.send(&snd, 1);
+  rec_ot_channel.recv(&rcv, 1);
 
   auto commit_begin = GET_TIME();
   std::vector<BYTEArrayVector> rec_commit_shares(num_execs, BYTEArrayVector(exec_num_commits, CODEWORD_BYTES));
@@ -130,6 +137,10 @@ int main(int argc, const char* argv[]) {
 
   auto commit_end = GET_TIME();
 
+  //Sync with Evaluator
+  rec_ot_channel.send(&snd, 1);
+  rec_ot_channel.recv(&rcv, 1);
+
   auto decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
 
@@ -146,6 +157,10 @@ int main(int argc, const char* argv[]) {
   }
 
   auto decommit_end = GET_TIME();
+
+  //Sync with Evaluator
+  rec_ot_channel.send(&snd, 1);
+  rec_ot_channel.recv(&rcv, 1);
 
   auto batch_decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
@@ -164,6 +179,7 @@ int main(int argc, const char* argv[]) {
 
   auto batch_decommit_end = GET_TIME();
 
+  rec_ot_channel.close();
   for (int e = 0; e < num_execs; ++e) {
     rec_channels[e].close();
   }

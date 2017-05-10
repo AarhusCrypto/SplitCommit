@@ -92,11 +92,14 @@ int main(int argc, const char* argv[]) {
   
   SplitCommitSender base_sender(128);
 
+  //Values used for network syncing after each phase
+  uint8_t rcv;
+  uint8_t snd;
+
   //Seed OTs
   auto seed_ot_begin = GET_TIME();
 
   base_sender.ComputeAndSetSeedOTs(rnd, send_ot_channel);
-  send_ot_channel.close();
 
   auto seed_ot_end = GET_TIME();
 
@@ -111,6 +114,10 @@ int main(int argc, const char* argv[]) {
 
   std::vector<std::future<void>> futures(num_execs);
   uint32_t exec_num_commits = CEIL_DIVIDE(num_commits, num_execs);
+
+  //Sync with Evaluator
+  send_ot_channel.recv(&rcv, 1);
+  send_ot_channel.send(&snd, 1);
 
   auto commit_begin = GET_TIME();
   std::vector<std::array<BYTEArrayVector, 2>> send_commit_shares(num_execs, {
@@ -133,6 +140,10 @@ int main(int argc, const char* argv[]) {
 
   auto commit_end = GET_TIME();
 
+  //Sync with Evaluator
+  send_ot_channel.recv(&rcv, 1);
+  send_ot_channel.send(&snd, 1);
+
   auto decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
     futures[e] = thread_pool.push([&send_end_point, &senders, &send_commit_shares, &send_channels, exec_num_commits, e](int id) {
@@ -148,6 +159,10 @@ int main(int argc, const char* argv[]) {
   }
 
   auto decommit_end = GET_TIME();
+
+  //Sync with Evaluator
+  send_ot_channel.recv(&rcv, 1);
+  send_ot_channel.send(&snd, 1);
 
   auto batch_decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
@@ -165,6 +180,7 @@ int main(int argc, const char* argv[]) {
 
   auto batch_decommit_end = GET_TIME();
 
+  send_ot_channel.close();
   for (int e = 0; e < num_execs; ++e) {
     send_channels[e].close();
   }
@@ -177,17 +193,17 @@ int main(int argc, const char* argv[]) {
   uint64_t decommit_time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(decommit_end - decommit_begin).count();
   uint64_t batch_decommit_time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(batch_decommit_end - batch_decommit_begin).count();
 
-    std::cout << "===== Timings for sender doing " << num_commits << " random commits using " << num_execs << " parallel execs " << std::endl;
+  std::cout << "===== Timings for sender doing " << num_commits << " random commits using " << num_execs << " parallel execs " << std::endl;
 
-    std::cout << "OT ms: " << (double) seed_ot_time_nano / 1000000 << std::endl;
-    std::cout << "Amortized OT ms: " << (double) seed_ot_time_nano / num_commits / 1000000 << std::endl;
-    std::cout << "Commit us (with OT): " << (double) (commit_time_nano + seed_ot_time_nano) / num_commits / 1000 << std::endl;
-    std::cout << "Commit us: " << (double) commit_time_nano / num_commits / 1000 << std::endl;
-    std::cout << "Commit total ms: " << (double) (commit_time_nano + seed_ot_time_nano) / 1000000 << std::endl;
-    std::cout << "Decommit us: " << (double) decommit_time_nano / num_commits / 1000 << std::endl;
-    std::cout << "Decommit total ms: " << (double) decommit_time_nano / 1000000 << std::endl;
-    std::cout << "BatchDecommit us: " << (double) batch_decommit_time_nano / num_commits / 1000 << std::endl;
-    std::cout << "BatchDecommit total ms: " << (double) batch_decommit_time_nano / 1000000 << std::endl;
+  std::cout << "OT ms: " << (double) seed_ot_time_nano / 1000000 << std::endl;
+  std::cout << "Amortized OT ms: " << (double) seed_ot_time_nano / num_commits / 1000000 << std::endl;
+  std::cout << "Commit us (with OT): " << (double) (commit_time_nano + seed_ot_time_nano) / num_commits / 1000 << std::endl;
+  std::cout << "Commit us: " << (double) commit_time_nano / num_commits / 1000 << std::endl;
+  std::cout << "Commit total ms: " << (double) (commit_time_nano + seed_ot_time_nano) / 1000000 << std::endl;
+  std::cout << "Decommit us: " << (double) decommit_time_nano / num_commits / 1000 << std::endl;
+  std::cout << "Decommit total ms: " << (double) decommit_time_nano / 1000000 << std::endl;
+  std::cout << "BatchDecommit us: " << (double) batch_decommit_time_nano / num_commits / 1000 << std::endl;
+  std::cout << "BatchDecommit total ms: " << (double) batch_decommit_time_nano / 1000000 << std::endl;
 
   return 0;
 }
