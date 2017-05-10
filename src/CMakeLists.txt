@@ -13,5 +13,5 @@ add_executable(SplitCommitReceiver mains/main-split-commit-rec.cpp)
 target_link_libraries(SplitCommitReceiver SPLIT_COMMIT)
 
 
-add_executable(SplitCommitReceiver mains/tutorial.cpp)
-target_link_libraries(SplitCommitReceiver SPLIT_COMMIT)
+add_executable(tutorials mains/tutorials/tutorials.cpp)
+target_link_libraries(tutorials SPLIT_COMMIT)

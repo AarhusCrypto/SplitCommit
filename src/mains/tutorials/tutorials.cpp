@@ -178,6 +178,7 @@ void FullTest1() {
 	osuCrypto::PRNG send_rnd(osuCrypto::ZeroBlock);
 
 	osuCrypto::Channel send_channel = send_end_point.addChannel("bit_channel", "bit_channel");
+	send_channel.waitForConnection();
 	commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
 	std::array<BYTEArrayVector, 2> send_commit_shares{
 		BYTEArrayVector(num_commits, commit_snd.cword_bytes),
@@ -214,6 +215,7 @@ void FullTest2() {
 
 	osuCrypto::Channel rec_channel = rec_end_point.addChannel("bit_channel", "bit_channel");
 	commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
+	rec_channel.waitForConnection();
 	BYTEArrayVector rec_commit_shares(num_commits, commit_snd.cword_bytes);
 
 	osuCrypto::Timer timer;
