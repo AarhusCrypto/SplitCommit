@@ -165,10 +165,77 @@ void tutorial_commit10()
 }
 
 
+void FullTest() {
+
+    int num_commits = 1 << 24;
+    SplitCommitSender commit_snd(1);
+    SplitCommitReceiver commit_rec(1);
+    osuCrypto::IOService ios(0);
+
+    std::thread ret_snd = std::thread([&]() {
+
+        osuCrypto::Endpoint send_end_point(ios, "localhost:1212", osuCrypto::EpMode::Server, "s");
+        osuCrypto::PRNG send_rnd(osuCrypto::ZeroBlock);
+
+        osuCrypto::Channel send_channel = send_end_point.addChannel("bit_channel", "bit_channel");
+        commit_snd.ComputeAndSetSeedOTs(send_rnd, send_channel);
+        std::array<BYTEArrayVector, 2> send_commit_shares{
+            BYTEArrayVector(num_commits, commit_snd.cword_bytes),
+            BYTEArrayVector(num_commits, commit_snd.cword_bytes)
+        };
+        osuCrypto::Timer timer;
+
+        //Test that we can commit multiple times
+        commit_snd.Commit(send_commit_shares, send_channel);
+
+        timer.setTimePoint("commit");
+        //Test BatchDecommit
+        commit_snd.Decommit(send_commit_shares, send_channel);
+
+        timer.setTimePoint("decommit");
+
+
+        commit_snd.BatchDecommit(send_commit_shares, send_channel);
+        timer.setTimePoint("batch decommit");
+        std::cout << timer << std::endl;
+
+        send_channel.close();
+    });
+
+    {
+
+        osuCrypto::Endpoint rec_end_point(ios, "localhost:1212", osuCrypto::EpMode::Client, "s");
+        osuCrypto::PRNG rec_rnd(osuCrypto::ZeroBlock);
+
+        osuCrypto::Channel rec_channel = rec_end_point.addChannel("bit_channel", "bit_channel");
+        commit_rec.ComputeAndSetSeedOTs(rec_rnd, rec_channel);
+        BYTEArrayVector rec_commit_shares(num_commits, commit_snd.cword_bytes);
+
+        osuCrypto::Timer timer;
+
+
+        //Test that we can commit multiple times
+        (commit_rec.Commit(rec_commit_shares, rec_rnd, rec_channel));
+
+        timer.setTimePoint("commit *");
+        BYTEArrayVector tmp(BITS_TO_BYTES(num_commits), 1);
+
+        (commit_rec.Decommit(rec_commit_shares, tmp, rec_channel));
+        timer.setTimePoint("decommit");
+        //Test BatchDecommit
+        (commit_rec.BatchDecommit(rec_commit_shares, tmp, rec_rnd, rec_channel));
+        timer.setTimePoint("batch decommit");
+
+        std::cout << timer << std::endl;
+
+        rec_channel.close();
+    }
+
+    ret_snd.join();
+
+}
 int main(int argc, char** argv)
 {
-
-    tutorial_commit10();
-
-
+    if(argc > 1) FullTest();
+	else tutorial_commit10();
 }
