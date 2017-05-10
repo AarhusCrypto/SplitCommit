@@ -101,9 +101,6 @@ int main(int argc, const char* argv[]) {
 
   base_sender.ComputeAndSetSeedOTs(rnd, send_ot_channel);
 
-  //Sync with Evaluator
-  send_ot_channel.recv(&rcv, 1);
-  send_ot_channel.send(&snd, 1);
   auto seed_ot_end = GET_TIME();
 
   std::vector<osuCrypto::Channel> send_channels;
@@ -117,6 +114,10 @@ int main(int argc, const char* argv[]) {
 
   std::vector<std::future<void>> futures(num_execs);
   uint32_t exec_num_commits = CEIL_DIVIDE(num_commits, num_execs);
+
+  //Sync with Evaluator
+  send_ot_channel.recv(&rcv, 1);
+  send_ot_channel.send(&snd, 1);
 
   auto commit_begin = GET_TIME();
   std::vector<std::array<BYTEArrayVector, 2>> send_commit_shares(num_execs, {
@@ -137,11 +138,11 @@ int main(int argc, const char* argv[]) {
     r.wait();
   }
 
+  auto commit_end = GET_TIME();
+
   //Sync with Evaluator
   send_ot_channel.recv(&rcv, 1);
   send_ot_channel.send(&snd, 1);
-
-  auto commit_end = GET_TIME();
 
   auto decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
@@ -157,11 +158,11 @@ int main(int argc, const char* argv[]) {
     r.wait();
   }
 
+  auto decommit_end = GET_TIME();
+
   //Sync with Evaluator
   send_ot_channel.recv(&rcv, 1);
   send_ot_channel.send(&snd, 1);
-
-  auto decommit_end = GET_TIME();
 
   auto batch_decommit_begin = GET_TIME();
   for (int e = 0; e < num_execs; ++e) {
@@ -176,10 +177,6 @@ int main(int argc, const char* argv[]) {
   for (std::future<void>& r : futures) {
     r.wait();
   }
-
-  //Sync with Evaluator
-  send_ot_channel.recv(&rcv, 1);
-  send_ot_channel.send(&snd, 1);
 
   auto batch_decommit_end = GET_TIME();
 
